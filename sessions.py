@@ -160,6 +160,13 @@ class SpotifySession():
     return "PYOK REPEAT " + state.upper()
 
   def change_volume(self, increase=0, step=10):
+    step = int(str(step).strip())
+    if 0 < step < 1:
+      step = step * 100
+    if step > 100:
+      step = 100
+    elif step < 0:
+      step = 0
     curr_playback = self._sp.current_playback()
     new_volume = curr_playback['device']['volume_percent']
     new_volume = new_volume - step if increase == 0 else new_volume + step 
