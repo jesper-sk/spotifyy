@@ -56,21 +56,30 @@ class SpotifySession():
   def help_functions(self):
     print("My main aim is to hold a conversation with you to assist you with Spotify.")
     print("If you are logged in I can control your Spotify. I can...")
-    print("-Play/Resume your Spotify.")
-    print("-Pause your Spotify.")
-    print("-Skip to the next track.")
-    print("-Go back to the previous track.")
-    print("-Rewind to the start of the track.")
-    print("-Turn shuffle on and off.")
-    print("-Set repeat to track, context or off.")
-    print("-Save the track you are currently listening to.")
-    print("-Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
-    print("-Play a track, album, artist or playlist for you.")
-    print("-Tell you to which song you are currently listening.")
+    print("- Play/Resume your Spotify.")
+    print("- Pause your Spotify.")
+    print("- Skip to the next track.")
+    print("- Go back to the previous track.")
+    print("- Rewind to the start of the track.")
+    print("- Turn shuffle on and off.")
+    print("- Set repeat to track, context or off.")
+    print("- Save the track you are currently listening to.")
+    print("- Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
+    print("- Play a track, album, artist or playlist for you.")
+    print("- Tell you to which song you are currently listening.")
 
   def help_play_find(self):
-    print("jochie")
-  
+    print("You can use the [play [query]] function to immediately play the top result found with your provided [query].")
+    print("You can use the [find [query]] function to let me find you some results for the given query.")
+    print("You will then able to pick the item you want using [item [item_number]]")
+    print("I default to finding tracks unless you specify this earlier.")
+    print("You can specify this using [play [item_type] [query]], [find [item_type] [query]], or [set type [item_type]]")
+    print("The possible item types are:")
+    print("- track")
+    print("- album")
+    print("- artist")
+    print("- playlist")
+
 
   #########
   # LOGIN #
@@ -282,10 +291,25 @@ class SpotifySession():
     artist = playing['item']['artists'][0]['name']
     return "PYOK PLAY " + name + " by " + artist
 
+  def enqueue_from_query(self, index=-1, play=0):
+    if index >= 0:
+      self._query_index = int(index) - 1
+
+    track = self._query_results[self._query_index]
+    self._sp.add_to_queue(device_id=self._device_id, uri=track['uri'])
+
+    name = track['name']
+    artist = track['artists'][0]['name']
+
+    if play:      
+      self.next_track()
+      return "PYOK PLAY " + name + " by " + artist
+    return "PYOK ENQUEUE " + name + " by " + artist
+
   def play_next_from_query(self):
     self.play_from_query(index=self._query_index+1)
 
-  def find(self, query, kind, offset=0, limit=10, play=0):
+  def find(self, query, kind, offset=0, limit=10, play=0, enqueue=0):
     kind = kind.strip()
     if not (kind in ["track", "album", "artist", "playlist"]):
       return "PYFAIL FIND INVALIDTYPE"
@@ -303,8 +327,12 @@ class SpotifySession():
     if (self._query_nresults) == 0:
       return "PYFAIL FIND NORESULTS"
 
-    if play:
+    if play and kind == "track":
+      return self.enqueue_from_query(play=1)
+    elif play:
       return self.play_from_query()
+    elif enqueue:
+      return self.enqueue_from_query()
     else:
       return "PYOK FIND " + str(self._query_nresults)
 
