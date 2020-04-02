@@ -9,6 +9,9 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from programy.utils.logging.ylogger import YLogger
 
 class SpotifySession():
+  ########
+  # INIT #
+  ########
   def __init__(self):
     self._sp = None
     self._test = 0
@@ -24,163 +27,34 @@ class SpotifySession():
     self._username = None
     #print("SpotifySession initialized.")
 
-  #Login to a Spotify account, and initiate authenitcated Spotify object
-  def login(self, uname=""):
 
-    try:
-      if len(uname) == 0:
-        try:
-          file = open("uname.txt", "r")
-          uname = file.read()
-          file.close()
-        except FileNotFoundError:
-          return "LOGINFAILNONAME"
+  #################################
+  ### EXECUTE, MAIN ENTRY POINT ###
+  #################################
+  def execute(self, context, data):
+    params = [x.strip().lower() for x in data.split(',')]
 
-      if self.is_logged_in and _username == uname:
-        return "LOGINOK"
-
-      token = util.prompt_for_user_token( username=uname
-                                        , scope='ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control playlist-read-collaborative playlist-modify-public playlist-read-private playlist-modify-private user-library-modify user-library-read user-top-read user-read-playback-position user-read-recently-played user-follow-read user-follow-modify'
-                                        , client_id='b1559f5b27ff48a09d34e95c68c4a95d'
-                                        , client_secret='5c17274ad83843259af8bd4e62b4a354'
-                                        , redirect_uri='http://localhost/'
-                                        )
-      if token:
-        self._sp = spotipy.Spotify(auth=token)
-        file = open("uname.txt", "w")
-        file.write(uname)
+    if (not self.is_logged_in) and params[0] != "login":
+      try:
+        file = open("uname.txt", "r")
         file.close()
-        return "LOGINOK"
+      except FileNotFoundError:
+        pass
+        #return "LOGIN FIRST"
 
-      else:
-        return "LOGINFAIL The authentication procedure was interrupted"
+    if self.is_logged_in:
+      pass
+      #TODO: Check if token expired and refresh if so
 
-    except Exception as fail:
-      return "LOGINFAIL"
+    cmd = 'self.' + params[0] + '(' + ','.join(params[1:]) + ')'
 
-  def play(self):
-    self._sp.start_playback()
-    return "PLAYBOK"
+    #TODO: tryexcept (ERR-FAIL)
+    return eval(cmd)
 
-  def pause(self):
-    self._sp.pause_playback()
-    return "PAUSEOK"
 
-  def next_track(self):
-    self._sp.next_track()
-    return "PLAYBOK"
-
-  def prev_track(self):
-    self._sp.previous_track()
-    return "PLAYBOK"
-
-  def shuffle(self, state):
-    stb = state == "on"
-    self._sp.shuffle(stb)
-    return "SHUFFLEOK " + state
-
-  def repeat(self, state):
-    self._sp.repeat(state)
-    return "REPEATOK " + state.upper()
-
-  def is_curr_on_saved(self):
-    curr_track = self._sp.current_playback()
-    is_on_saved = self._sp.current_user_saved_tracks_contains(curr_track['item']['uri'])
-    if is_on_saved:
-      return "PYOK ISONSAVED YES"
-    else:
-      return "PYOK ISONSAVED NO"
-
-  def add_curr_to_saved(self):
-    curr_track = self._sp.current_playback()
-    self._sp.current_user_saved_tracks_add(curr_track['item']['uri'])
-    return "ADDOK " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
-
-  def remove_curr_from_saved(self):
-    curr_track = self._sp.current_playback()
-    self._sp.current_user_saved_tracks_delete(curr_track['item']['uri'])
-    return "PYOK DELFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
-
-  def current_playback(self):
-    playing = self._sp.current_playback()
-    name = playing['item']['name']
-    artist = playing['item']['artists'][0]['name']
-    return "CURRPLAYBOK " + name + " by " + artist
-
-  def play_from_query(self, index=-1):
-    if index >= 0:
-      self._query_index = int(index) - 1
-
-    if self._query_kind == "track":
-      self._sp.start_playback(uris=[self._query_results[self._query_index]['uri']])
-    else:
-      self._sp.start_playback(context_uri=self._query_results[self._query_index]['uri'])
-
-    time.sleep(0.4)
-
-    playing = self._sp.current_playback()
-    name = playing['item']['name']
-    artist = playing['item']['artists'][0]['name']
-    return "PLAYOK " + name + " by " + artist
-
-  def play_next_from_query(self):
-    self.play_from_query(index=self._query_index+1)
-
-  def find(self, query, kind, offset=0, limit=10, play=0):
-    kind = kind.strip()
-    if not (kind in ["track", "album", "artist", "playlist"]):
-      return "FINDFAILTYPE"
-
-    self._query_index = 0
-    self._query_kind = kind
-    self._query = query
-    self._offset = offset
-    self._query_page = 0
-
-    q = self._sp.search(query, type=kind)
-    self._query_results = q[kind+'s']['items']
-
-    self._query_nresults = len(self._query_results)
-    if (self._query_nresults) == 0:
-      return "FINDFAILNORESULTS"
-
-    if play:
-      return self.play_from_query()
-    else:
-      return "FINDOK " + str(self._query_nresults)
-
-  def print_query_result(self, page=-1):
-    if page == -1:
-      page = self._query_page
-      
-    start = page*5
-
-    end = start + 5
-    if end > self._query_nresults:
-      end = self._query_nresults
-
-    if self._query_kind == "playlist":
-      print('\n'.join([str(index+1) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
-        for (index, x) in enumerate(self._query_results[start:end])]))
-
-    elif self._query_kind == "artist":
-      print('\n'.join([str(index+1) + ': ' + x['name']
-        for (index, x) in enumerate(self._query_results[start:end])]))
-
-    else:
-      print('\n'.join([str(index+1) + ': ' + x['name'] + " by " + x['artists'][0]['name'] 
-        for (index, x) in enumerate(self._query_results[start:end])]))
-
-    return "PRINTRESULTSOK"
-
-  def print_next_query_page(self):
-    self._query_page += 1
-    self.print_query_result()
-
-  def test(self):
-    self._test += 1
-    return str(self._test)
-
+  ########
+  # HELP #
+  ########
   def help(self):
     print("Hello I am SpotBot.")
     print("I am able to have a conversation with you and control your Spotify.")
@@ -209,31 +83,183 @@ class SpotifySession():
     print("-Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
     print("-Play a track, album, artist or playlist for you.")
     print("-Tell you to which song you are currently listening.")
-
-  def execute(self, context, data):
-    params = [x.strip().lower() for x in data.split(',')]
-
-    if (not self.is_logged_in) and params[0] != "login":
-      try:
-        file = open("uname.txt", "r")
-        file.close()
-      except FileNotFoundError:
-        pass
-        #return "LOGIN FIRST"
-
-    if self.is_logged_in:
-      pass
-      #TODO: Check if token expired and refresh if so
-
-    cmd = 'self.' + params[0] + '(' + ','.join(params[1:]) + ')'
-
-    #TODO: tryexcept (ERR-FAIL)
-    return eval(cmd)
   
+
+  #########
+  # LOGIN #
+  #########
+  def login(self, uname=""):
+    try:
+      if len(uname) == 0:
+        try:
+          with open('uname.txt', 'r') as file:
+            uname=file.read()
+        except FileNotFoundError:
+          return "PYFAIL LOGIN NONAME"
+
+      if self.is_logged_in and _username == uname:
+        return "PYOK LOGIN"
+
+      token = util.prompt_for_user_token( username=uname
+                                        , scope='ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control playlist-read-collaborative playlist-modify-public playlist-read-private playlist-modify-private user-library-modify user-library-read user-top-read user-read-playback-position user-read-recently-played user-follow-read user-follow-modify'
+                                        , client_id='b1559f5b27ff48a09d34e95c68c4a95d'
+                                        , client_secret='5c17274ad83843259af8bd4e62b4a354'
+                                        , redirect_uri='http://localhost/'
+                                        )
+      if token:
+        self._sp = spotipy.Spotify(auth=token)
+        with open("uname.txt", "w") as file:
+          file.write(uname)
+        return "PYOK LOGIN"
+
+      else:
+        return "PYFAIL LOGIN The authentication procedure was interrupted"
+
+    except Exception as fail:
+      return "PYFAIL LOGIN"
+
+
+  #########################
+  # BASIC SPOTIFY CONTROL #
+  #########################
+  def play(self):
+    self._sp.start_playback()
+    return "PYOK PLAYB"
+
+  def pause(self):
+    self._sp.pause_playback()
+    return "PYOK PAUSE"
+
+  def next_track(self):
+    self._sp.next_track()
+    return "PYOK PLAYB"
+
+  def prev_track(self):
+    self._sp.previous_track()
+    return "PYOK PLAYB"
+
+  def shuffle(self, state):
+    stb = state == "on"
+    self._sp.shuffle(stb)
+    return "PYOK SHUFFLE " + state.upper()
+
+  def repeat(self, state):
+    self._sp.repeat(state)
+    return "PYOK REPEAT " + state.upper()
+
+
+  ###################################
+  # CURRENT PLAYBACK & SAVED TRACKS #
+  ###################################
+  def current_playback(self):
+    playing = self._sp.current_playback()
+    name = playing['item']['name']
+    artist = playing['item']['artists'][0]['name']
+    return "PYOK CURRPLAYB " + name + " by " + artist
+
+  def is_curr_on_saved(self):
+    curr_track = self._sp.current_playback()
+    is_on_saved = self._sp.current_user_saved_tracks_contains(curr_track['item']['uri'])
+    if is_on_saved:
+      return "PYOK ISONSAVED YES"
+    else:
+      return "PYOK ISONSAVED NO"
+
+  def add_curr_to_saved(self):
+    curr_track = self._sp.current_playback()
+    self._sp.current_user_saved_tracks_add(curr_track['item']['uri'])
+    return "PYOK ADD " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
+
+  def remove_curr_from_saved(self):
+    curr_track = self._sp.current_playback()
+    self._sp.current_user_saved_tracks_delete(curr_track['item']['uri'])
+    return "PYOK DELFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
+
+
+  #####################
+  # FIND & PLAY SONGS #
+  #####################
+  def play_from_query(self, index=-1):
+    if index >= 0:
+      self._query_index = int(index) - 1
+
+    if self._query_kind == "track":
+      self._sp.start_playback(uris=[self._query_results[self._query_index]['uri']])
+    else:
+      self._sp.start_playback(context_uri=self._query_results[self._query_index]['uri'])
+
+    time.sleep(0.4)
+
+    playing = self._sp.current_playback()
+    name = playing['item']['name']
+    artist = playing['item']['artists'][0]['name']
+    return "PYOK PLAY " + name + " by " + artist
+
+  def play_next_from_query(self):
+    self.play_from_query(index=self._query_index+1)
+
+  def find(self, query, kind, offset=0, limit=10, play=0):
+    kind = kind.strip()
+    if not (kind in ["track", "album", "artist", "playlist"]):
+      return "PYFAIL FIND INVALIDTYPE"
+
+    self._query_index = 0
+    self._query_kind = kind
+    self._query = query
+    self._offset = offset
+    self._query_page = 0
+
+    q = self._sp.search(query, type=kind)
+    self._query_results = q[kind+'s']['items']
+
+    self._query_nresults = len(self._query_results)
+    if (self._query_nresults) == 0:
+      return "PYFAIL FIND NORESULTS"
+
+    if play:
+      return self.play_from_query()
+    else:
+      return "PYOK FIND " + str(self._query_nresults)
+
+  def print_query_result(self, page=-1):
+    if page == -1:
+      page = self._query_page
+      
+    start = page*5
+
+    end = start + 5
+    if end > self._query_nresults:
+      end = self._query_nresults
+
+    if self._query_kind == "playlist":
+      print('\n'.join([str(index+1) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
+        for (index, x) in enumerate(self._query_results[start:end])]))
+
+    elif self._query_kind == "artist":
+      print('\n'.join([str(index+1) + ': ' + x['name']
+        for (index, x) in enumerate(self._query_results[start:end])]))
+
+    else:
+      print('\n'.join([str(index+1) + ': ' + x['name'] + " by " + x['artists'][0]['name'] 
+        for (index, x) in enumerate(self._query_results[start:end])]))
+
+    return "PYOK PRINTRESULTS"
+
+  def print_next_query_page(self):
+    self._query_page += 1
+    return self.print_query_result()
+
+  
+  #####################
+  # EMOTION FUNCTIONS #
+  #####################
   def play_track_emotion(self, emotion):
-    # takes as input a string from one of the emotions
-    # returns None if emotion is not known
-    # plays a song with that mood if emotion is known returns
+    '''
+      Takes as input a string from one of the emotions.
+      Returns None if emotion is not known.
+      Plays a song with that mood if emotion is known returns.
+    '''
+    
     emotion = str(emotion).upper()  
     emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY"]
     
@@ -297,3 +323,11 @@ class SpotifySession():
         self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a song from the Relax playlist
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
+
+
+  ########
+  # TEST #
+  ########
+  def test(self):
+    self._test += 1
+    return str(self._test)
