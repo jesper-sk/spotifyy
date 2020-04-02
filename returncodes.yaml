@@ -1,53 +1,63 @@
 Generic:
   EXIT
   LOGINFIRST
-  fail:
-    FAIL ERROR
-    FAIL INVALIDCOMMAND [command]
+  PYFAIL:
+    PYFAIL ERROR
+    PYFAIL INVALIDCOMMAND [command]
 
 Spotifyy:
-  fail:
-    FAIL SPOTIFYY [reason] [command] 
+  PYFAIL:
+    PYFAIL SPOTIFYY [reason] [command] 
     reason:
       GENERIC
       NODEVICE
       RESTRICTIONVIOLATED
       INVALIDREQUEST
-      TOKENEXPIRED
+      TPYOKENEXPIRED
     command: 
       eerste parameter uit <extension>
 
 Login:
-  ok:
-    OK LOGIN
-  fail:
-    FAIL LOGIN NONAME
-    FAIL LOGIN + message
-    FAIL LOGIN
+  PYOK:
+    PYPYOK LOGIN
+  PYFAIL:
+    PYFAIL LOGIN NONAME
+    PYFAIL LOGIN + message
+    PYFAIL LOGIN
 
 Playback:
-  ok:
-    OK PLAYB
-    OK PAUSE
-    OK SHUFFLE + enabled state
-    OK REPEAT + enabled state
-    OK CURRPLAYB + currently playing
+  PYOK:
+    PYOK PLAYB
+    PYOK PAUSE
+    PYOK SHUFFLE + enabled state
+    PYOK REPEAT + enabled state
+    PYOK CURRPLAYB + currently playing
 
 Playlist mod:
-  ok:
-    OK ADD + song added
+  PYOK:
+    PYOK ADD + song added
 
 Querying:
-  ok:
-    OK PLAY + currently playing
-    OK FIND + no. results found
-  fail:
-    FAIL FIND INVALIDTYPE
-    FAIL FIND NORESULTS
+  PYOK:
+    PYOK PLAY + currently playing
+    PYOK FIND + no. results found
+  PYFAIL:
+    PYFAIL FIND INVALIDTYPE
+    PYFAIL FIND NORESULTS
+    PYFAIL PLAY OUTOFRANGE
 
+Devices:
+  PYOK:
+    PYOK CURRDEVICE + current device name
+    PYOK CURRDEVICE NONE
+    PYOK DEVICESREFRESH + no. devices
+    PYOK SETDEVICE NONE
+    PYOK SETDEVICE + device name
+  PYFAIL:
+    PYFAIL SETDEVICE OUTOFRANGE + num devices
 
 Print:
-  ok:
-    OK PRINTRESULTS
+  PYOK:
+    PYOK PRINTRESULTS
 
 

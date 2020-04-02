@@ -26,6 +26,10 @@ class SpotifySession():
 
     self.is_logged_in = False
     self._username = None
+
+    self._device = None
+    self._device_id = None
+    self._available_devices = None
     #print("SpotifySession initialized.")
 
 
@@ -126,24 +130,58 @@ class SpotifySession():
     else:
       return "PYOK LOGOUT ALREADYLOGGEDOUT"
 
+  ##############################
+  # DEVICE CONTROL & SELECTION #
+  ##############################
+  def current_device(self):
+    if not self._device:
+      return "PYOK CURRDEVICE NONE"
+    return f"PYOK CURRDEVICE {self._device['name']}"
+
+  def refresh_print_devices(self):
+    self._available_devices = self._sp.devices()['devices']
+    n = len(self._available_devices)
+    if n > 1:
+      print('\n'.join([f"{index+1}: {x['name']} ({x['type']})" for (index, x) in enumerate(self._available_devices)]))
+    return f"PYOK DEVICESREFRESH {n}"
+
+  def set_device(self, index=-1):
+    if index < 0:
+      self._device = None
+      self._device_id = None
+      return "PYOK SETDEVICE NONE"
+
+    index-=1 #Humans are 1-based
+
+    self._available_devices = self._sp.devices()['devices']
+    if index >= len(self._available_devices):
+      return f"PYFAIL SETDEVICE OUTOFRANGE {len(self._available_devices)}"     
+    else:
+      self._device = self._available_devices[index]
+      self._device_id = self._device['id']
+      return f"PYOK SETDEVICE {self._device['name']}"
+  
+  def reset_device(self):
+    return self.set_device()
+
 
   #########################
   # BASIC SPOTIFY CONTROL #
   #########################
   def play(self):
-    self._sp.start_playback()
+    self._sp.start_playback(self._device_id)
     return "PYOK PLAYB"
 
   def pause(self):
-    self._sp.pause_playback()
+    self._sp.pause_playback(self._device_id)
     return "PYOK PAUSE"
 
   def next_track(self):
-    self._sp.next_track()
+    self._sp.next_track(self._device_id)
     return "PYOK PLAYB"
 
   def prev_track(self):
-    self._sp.previous_track()
+    self._sp.previous_track(self._device_id)
     return "PYOK PLAYB"
 
   def rewind(self):
@@ -152,11 +190,11 @@ class SpotifySession():
 
   def shuffle(self, state):
     stb = state == "on"
-    self._sp.shuffle(stb)
+    self._sp.shuffle(stb, self._device_id)
     return "PYOK SHUFFLE " + state.upper()
 
   def repeat(self, state):
-    self._sp.repeat(state)
+    self._sp.repeat(state, self._device_id)
     return "PYOK REPEAT " + state.upper()
 
   def change_volume(self, increase=0, step=10):
@@ -221,9 +259,9 @@ class SpotifySession():
       self._query_index = int(index) - 1
 
     if self._query_kind == "track":
-      self._sp.start_playback(uris=[self._query_results[self._query_index]['uri']])
+      self._sp.start_playback(device_id=self._device_id, uris=[self._query_results[self._query_index]['uri']])
     else:
-      self._sp.start_playback(context_uri=self._query_results[self._query_index]['uri'])
+      self._sp.start_playback(device_id=self._device_id, context_uri=self._query_results[self._query_index]['uri'])
 
     time.sleep(0.4)
 
@@ -267,6 +305,8 @@ class SpotifySession():
     end = start + 5
     if end > self._query_nresults:
       end = self._query_nresults
+      if start == end:
+        return "PYOK NOMORERESULTS"
 
     if self._query_kind == "playlist":
       print('\n'.join([str(index+1) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
@@ -284,6 +324,10 @@ class SpotifySession():
 
   def print_next_query_page(self):
     self._query_page += 1
+    return self.print_query_result()
+
+  def print_prev_query_page(self):
+    self._query_page -= 1
     return self.print_query_result()
 
   
@@ -310,13 +354,13 @@ class SpotifySession():
         return "EMOTIONFAIL"
 
     else:
-        options = {"HAPPY" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
-                ,"SAD" : ("self._sp.start_playback(None, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
-                ,"RELAX" : ("self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
-                ,"ANGRY" : ("self._sp.start_playback(None, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
-                ,"SLEEP" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
-                ,"ENERGETIC" : ("self._sp.start_playback(None, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
-                ,"STUDY" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
+        options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
+                ,"SAD" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
+                ,"RELAX" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
+                ,"ANGRY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
+                ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
+                ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
+                ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
                 }
         cmd, mess = options[emotion]
         exec(cmd)
@@ -353,17 +397,17 @@ class SpotifySession():
     print('You seem {}'.format(mood))
     if score < -0.1:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(None, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
+        self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
         print('This is a song from a Sad-playlist')
         return "POSITIVITYOK"
     elif score > 0.1:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a song from a positive
+        self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a song from a positive
         print('This is a song from a Positive-playlist')
         return "POSITIVITYOK"
     else:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a song from the Relax playlist
+        self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a song from the Relax playlist
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
 
