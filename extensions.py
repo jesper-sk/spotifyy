@@ -29,6 +29,7 @@ class SpotifyExtension(Extension):
 
   def execute(self, context, data):   
     params = [x.strip().lower() for x in data.split(',')]
+    YLogger.debug(context, f"Received command {' '.join(params)}")
 
     if params[0] == "close":
       os.remove('session.pickle')
