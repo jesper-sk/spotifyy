@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import random
 
 import spotipy
 import spotipy.util as util
@@ -282,6 +283,12 @@ class SpotifySession():
   #####################
   # EMOTION FUNCTIONS #
   #####################
+  def calm_down(self):
+    self._sp.start_playback(context_uri='spotify:playlist:37i9dQZF1DWSf2RDTDayIx')
+    self.shuffle("on")
+    self.next_track()
+    return "PYOK COOLDOWN"
+
   def play_track_emotion(self, emotion):
     '''
       Takes as input a string from one of the emotions.
@@ -353,24 +360,36 @@ class SpotifySession():
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
 
+
   ###################
   # RECOMMENDATIONS #
   ###################
   def recommendations(self, genre = None):
-    if genre is None:
-      dic = self._sp.recommendation_genre_seeds()
-      for element in dic['genres']:
-        print(element.strip("'"), end='')
-        print(' - ', end='')
-      print('/n')
-      return
+    genre = str(genre).strip()
+    tracks = self._sp.recommendations(seed_genres=[genre])
+    if len(tracks['tracks']) == 0:
+      return "PYOK RECOMMENDATION NORESULTS"
     else:
-      dic = self._sp.recommendation_genre_seeds()
-      print(genre)
-      track = self._sp.recommendations(None, ['soul'])
-      self._sp.start_playback(track)
-      print(track)
-      return 'hoi'
+      choosen_track = random.choice(tracks['tracks'])
+      self._sp.start_playback(uris=[choosen_track['uri']])
+      name = choosen_track['name']
+      artist = choosen_track['artists'][0]['name']
+      return "PYOK PLAY " + name + " by " + artist
+    
+    
+    # dic = self._sp.recommendation_genre_seeds()
+    # if genre is None:
+    #   for element in dic['genres']:
+    #     print(element.strip("'"), end='')
+    #     print(' - ', end='')
+    #   print('/n')
+    #   return
+    # else:    
+    #   print(genre)
+    #   track = self._sp.recommendations(seed_genres='soul')
+    #   self._sp.start_playback(track)
+    #   print(track)
+    #   return 'hoi'
 
   ########
   # TEST #
