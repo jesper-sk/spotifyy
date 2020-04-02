@@ -284,12 +284,16 @@ class SpotifySession():
     else:
       self._sp.start_playback(device_id=self._device_id, context_uri=self._query_results[self._query_index]['uri'])
 
-    time.sleep(0.4)
 
-    playing = self._sp.current_playback()
-    name = playing['item']['name']
-    artist = playing['item']['artists'][0]['name']
-    return "PYOK PLAY " + name + " by " + artist
+    name = self._query_results[self._query_index]['name']
+    if self._query_kind == "artist":
+      by = " "
+    elif self._query_kind == "playlist":
+      by = f", owned by {self._query_results[self._query_index]['owner']['id']}"
+    else:
+      by = f" by {self._query_results[self._query_index]['artists'][0]['name']}"
+
+    return "PYOK PLAY " + name + by
 
   def enqueue_from_query(self, index=-1, play=0):
     if index >= 0:
@@ -349,15 +353,15 @@ class SpotifySession():
         return "PYOK NOMORERESULTS"
 
     if self._query_kind == "playlist":
-      print('\n'.join([str(index+1) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
+      print('\n'.join([str((index+1)+(page*5)) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
         for (index, x) in enumerate(self._query_results[start:end])]))
 
     elif self._query_kind == "artist":
-      print('\n'.join([str(index+1) + ': ' + x['name']
+      print('\n'.join([str((index+1)+(page*5)) + ': ' + x['name']
         for (index, x) in enumerate(self._query_results[start:end])]))
 
     else:
-      print('\n'.join([str(index+1) + ': ' + x['name'] + " by " + x['artists'][0]['name'] 
+      print('\n'.join([str((index+1)+(page*5)) + ': ' + x['name'] + " by " + x['artists'][0]['name'] 
         for (index, x) in enumerate(self._query_results[start:end])]))
 
     return "PYOK PRINTRESULTS"
