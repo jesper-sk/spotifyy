@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import random
 
 import spotipy
 import spotipy.util as util
@@ -52,15 +53,16 @@ class SpotifySession():
 
   def help_functions(self):
     print("My main aim is to hold a conversation with you to assist you with Spotify.")
-    print("If you are logged in I can control your Spotify. I can")
+    print("If you are logged in I can control your Spotify. I can...")
     print("-Play/Resume your Spotify.")
     print("-Pause your Spotify.")
     print("-Skip to the next track.")
     print("-Go back to the previous track.")
+    print("-Rewind to the start of the track.")
     print("-Turn shuffle on and off.")
     print("-Set repeat to track, context or off.")
     print("-Save the track you are currently listening to.")
-    print("-Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
+    print("-Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
     print("-Play a track, album, artist or playlist for you.")
     print("-Tell you to which song you are currently listening.")
   
@@ -98,6 +100,36 @@ class SpotifySession():
     except Exception as fail:
       return "PYFAIL LOGIN"
 
+  def logout(self, uname, all=0):
+    saved_uname = "_"
+    try:
+      with open('uname.txt', 'r') as file:
+        saved_uname = file.read()
+    except:
+      pass
+
+    if (uname == saved_uname):
+      try:
+        os.remove('uname.txt')
+        print(os.getcwd())
+        os.remove('.cache-' + uname.strip())
+      except Exception as fail:
+        print(fail)
+        #pass
+      
+      if (all == 1):
+        try:          
+          import webbrowser
+          webbrowser.open("https://www.spotify.com/nl/account/apps/")
+          print("Login on the user you want to remove, and remove me from the authorized apps.")
+          return "PYOK LOGOUT ALL"
+        except Exception as fail:
+          return "PYFAIL LOGOUT BROWSER https://www.spotify.com/nl/account/apps/"     
+      return "PYOK LOGOUT"
+
+    else:
+      return "PYOK LOGOUT ALREADYLOGGEDOUT"
+
   ##############################
   # DEVICE CONTROL & SELECTION #
   ##############################
@@ -132,6 +164,7 @@ class SpotifySession():
   def reset_device(self):
     return self.set_device()
 
+
   #########################
   # BASIC SPOTIFY CONTROL #
   #########################
@@ -151,6 +184,10 @@ class SpotifySession():
     self._sp.previous_track(self._device_id)
     return "PYOK PLAYB"
 
+  def rewind(self):
+    self._sp.seek_track(0)
+    return "PYOK PLAYB"
+
   def shuffle(self, state):
     stb = state == "on"
     self._sp.shuffle(stb, self._device_id)
@@ -159,6 +196,31 @@ class SpotifySession():
   def repeat(self, state):
     self._sp.repeat(state, self._device_id)
     return "PYOK REPEAT " + state.upper()
+
+  def change_volume(self, increase=0, step=10):
+    step = int(str(step).strip())
+    if 0 < step < 1:
+      step = step * 100
+    if step > 100:
+      step = 100
+    elif step < 0:
+      step = 0
+    curr_playback = self._sp.current_playback()
+    new_volume = curr_playback['device']['volume_percent']
+    new_volume = new_volume - step if increase == 0 else new_volume + step 
+    return(self.set_volume(new_volume))
+
+  def set_volume(self, volume):
+    volume = float(volume)
+    if 0 < volume < 1:
+      volume = volume * 100
+    if volume > 100:
+      volume = 100
+    elif volume < 0:
+      volume = 0
+    volume = int(volume)
+    self._sp.volume(volume)
+    return "PYOK VOLUME " + str(volume)
 
 
   ###################################
@@ -186,7 +248,7 @@ class SpotifySession():
   def remove_curr_from_saved(self):
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_delete(curr_track['item']['uri'])
-    return "PYOK DELFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
+    return "PYOK REMOVEFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
 
   #####################
@@ -272,6 +334,12 @@ class SpotifySession():
   #####################
   # EMOTION FUNCTIONS #
   #####################
+  def calm_down(self):
+    self._sp.start_playback(context_uri='spotify:playlist:37i9dQZF1DWSf2RDTDayIx')
+    self.shuffle("on")
+    self.next_track()
+    return "PYOK COOLDOWN"
+
   def play_track_emotion(self, emotion):
     '''
       Takes as input a string from one of the emotions.
@@ -295,8 +363,9 @@ class SpotifySession():
                 ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
                 }
         cmd, mess = options[emotion]
-        self._sp.shuffle(True, device_id=self._device_id)
         exec(cmd)
+        self.shuffle("on")
+        self.next_track()
         return "EMOTIONOK"
   
   def play_track_positiviy(self, score):
@@ -326,7 +395,7 @@ class SpotifySession():
         mood = 'EXTREMELY POSITIVE'
 
     print('You seem {}'.format(mood))
-    if score < 0:
+    if score < -0.1:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
         print('This is a song from a Sad-playlist')
@@ -342,6 +411,36 @@ class SpotifySession():
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
 
+
+  ###################
+  # RECOMMENDATIONS #
+  ###################
+  def recommendations(self, genre = None):
+    genre = str(genre).strip()
+    tracks = self._sp.recommendations(seed_genres=[genre])
+    if len(tracks['tracks']) == 0:
+      return "PYOK RECOMMENDATION NORESULTS"
+    else:
+      choosen_track = random.choice(tracks['tracks'])
+      self._sp.start_playback(uris=[choosen_track['uri']])
+      name = choosen_track['name']
+      artist = choosen_track['artists'][0]['name']
+      return "PYOK PLAY " + name + " by " + artist
+    
+    
+    # dic = self._sp.recommendation_genre_seeds()
+    # if genre is None:
+    #   for element in dic['genres']:
+    #     print(element.strip("'"), end='')
+    #     print(' - ', end='')
+    #   print('/n')
+    #   return
+    # else:    
+    #   print(genre)
+    #   track = self._sp.recommendations(seed_genres='soul')
+    #   self._sp.start_playback(track)
+    #   print(track)
+    #   return 'hoi'
 
   ########
   # TEST #
