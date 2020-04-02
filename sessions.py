@@ -83,10 +83,23 @@ class SpotifySession():
     self._sp.repeat(state)
     return "REPEATOK " + state.upper()
 
-  def add_curr_to_fav(self):
-    d = self._sp.current_playback()
-    self._sp.current_user_saved_tracks_add([d['item']['uri']])
-    return "ADDOK " + d['item']['name'] + " by " + d['item']['artists'][0]['name']
+  def is_curr_on_saved(self):
+    curr_track = self._sp.current_playback()
+    is_on_saved = self._sp.current_user_saved_tracks_contains(curr_track['item']['uri'])
+    if is_on_saved:
+      return "PYOK ISONSAVED YES"
+    else:
+      return "PYOK ISONSAVED NO"
+
+  def add_curr_to_saved(self):
+    curr_track = self._sp.current_playback()
+    self._sp.current_user_saved_tracks_add(curr_track['item']['uri'])
+    return "ADDOK " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
+
+  def remove_curr_from_saved(self):
+    curr_track = self._sp.current_playback()
+    self._sp.current_user_saved_tracks_delete(curr_track['item']['uri'])
+    return "PYOK DELFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
   def current_playback(self):
     playing = self._sp.current_playback()
@@ -184,18 +197,18 @@ class SpotifySession():
     print("When this is done, all should be ok and I will be able to control your Spotify for you.")
 
   def help_functions(self):
-    print("My main aim is to hold a conversation with you to assist you with Spotify.
-          "If you are logged in I can control your Spotify. I can")
-    print("  Play/Resume your Spotify.")
-    print("  Pause your Spotify.")
-    print("  Skip to the next track.")
-    print("  Go back to the previous track.")
-    print("  Turn shuffle on and off.")
-    print("  Set repeat to track, context or off.")
-    print("  Save the track you are currently listening to.")
-    print("  Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
-    print("  Play a track, album, artist or playlist for you.")
-    print("  Tell you to which song you are currently listening.")
+    print("My main aim is to hold a conversation with you to assist you with Spotify.")
+    print("If you are logged in I can control your Spotify. I can")
+    print("-Play/Resume your Spotify.")
+    print("-Pause your Spotify.")
+    print("-Skip to the next track.")
+    print("-Go back to the previous track.")
+    print("-Turn shuffle on and off.")
+    print("-Set repeat to track, context or off.")
+    print("-Save the track you are currently listening to.")
+    print("-Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
+    print("-Play a track, album, artist or playlist for you.")
+    print("-Tell you to which song you are currently listening.")
 
   def execute(self, context, data):
     params = [x.strip().lower() for x in data.split(',')]
