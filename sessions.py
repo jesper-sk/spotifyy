@@ -299,6 +299,24 @@ class SpotifySession():
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
 
+  ###################
+  # RECOMMENDATIONS #
+  ###################
+  def recommendations(self, genre = None):
+    if genre is None:
+      dic = self._sp.recommendation_genre_seeds()
+      for element in dic['genres']:
+        print(element.strip("'"), end='')
+        print(' - ', end='')
+      print('/n')
+      return
+    else:
+      dic = self._sp.recommendation_genre_seeds()
+      print(genre)
+      track = self._sp.recommendations(None, ['soul'])
+      self._sp.start_playback(track)
+      print(track)
+      return 'hoi'
 
   ########
   # TEST #
