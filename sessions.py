@@ -65,6 +65,9 @@ class SpotifySession():
     print("-Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
     print("-Play a track, album, artist or playlist for you.")
     print("-Tell you to which song you are currently listening.")
+
+  def help_play_find(self):
+    print("jochie")
   
 
   #########
@@ -234,7 +237,7 @@ class SpotifySession():
 
   def is_curr_on_saved(self):
     curr_track = self._sp.current_playback()
-    is_on_saved = self._sp.current_user_saved_tracks_contains(curr_track['item']['uri'])
+    is_on_saved = self._sp.current_user_saved_tracks_contains([curr_track['item']['uri']])
     if is_on_saved:
       return "PYOK ISONSAVED YES"
     else:
@@ -242,12 +245,12 @@ class SpotifySession():
 
   def add_curr_to_saved(self):
     curr_track = self._sp.current_playback()
-    self._sp.current_user_saved_tracks_add(curr_track['item']['uri'])
+    self._sp.current_user_saved_tracks_add([curr_track['item']['uri']])
     return "PYOK ADDTOSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
   def remove_curr_from_saved(self):
     curr_track = self._sp.current_playback()
-    self._sp.current_user_saved_tracks_delete(curr_track['item']['uri'])
+    self._sp.current_user_saved_tracks_delete([curr_track['item']['uri']])
     return "PYOK REMOVEFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
 
