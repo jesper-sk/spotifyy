@@ -377,7 +377,7 @@ class SpotifySession():
         self.next_track()
         return "EMOTIONOK"
   
-  def play_track_positiviy(self, score):
+  def play_track_positivity(self, score):
     score = float(score)
 
     if score < -0.9:
