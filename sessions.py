@@ -382,21 +382,7 @@ class SpotifySession():
       name = choosen_track['name']
       artist = choosen_track['artists'][0]['name']
       return "PYOK PLAY " + name + " by " + artist
-    
-    
-    # dic = self._sp.recommendation_genre_seeds()
-    # if genre is None:
-    #   for element in dic['genres']:
-    #     print(element.strip("'"), end='')
-    #     print(' - ', end='')
-    #   print('/n')
-    #   return
-    # else:    
-    #   print(genre)
-    #   track = self._sp.recommendations(seed_genres='soul')
-    #   self._sp.start_playback(track)
-    #   print(track)
-    #   return 'hoi'
+
 
   ########
   # TEST #
