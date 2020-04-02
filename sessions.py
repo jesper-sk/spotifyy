@@ -490,7 +490,7 @@ class SpotifySession():
     else:
       artist_seed = []
       for artist in str(artists).split(','):
-        res = self._sp.search(artist, limit=1, type="artists")
+        res = self._sp.search(artist.strip(), limit=1, type="artists")
         artist_seed = artist_seed.append(res['artists'][0]['items']['id']) if len(res['items']) > 0 else artist_seed
       
       if len(artist_seed) == 0:
@@ -502,7 +502,7 @@ class SpotifySession():
     if genres == None or str(genres).strip() == "":
       return None
     else:
-      genre_seed = genre_seed.append(genre for genre in str(genres).split(','))
+      genre_seed = genre_seed.append(genre.strip() for genre in str(genres).split(','))
       if len(genre_seed) == 0:
         return None
       else:
@@ -514,7 +514,7 @@ class SpotifySession():
     else:
       track_seed = []
       for track in str(tracks).split(','):
-        res = self._sp.search(track, limit=1, type="track")
+        res = self._sp.search(track.strip(), limit=1, type="track")
         track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
       
       if len(track_seed) == 0:
