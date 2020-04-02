@@ -84,10 +84,11 @@ class SpotifyExtension(Extension):
       if os.path.isfile('latestfail.txt'):
         with open('latestfail.txt', 'r') as file:
           cmd = file.read()
-          try:
-            return eval(cmd)
-          except:
-            pass
+        os.remove('latestfail.txt')
+        try:
+          return eval(cmd)
+        except:
+          pass
 
 
     if succeeded:

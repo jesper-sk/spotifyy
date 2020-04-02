@@ -422,7 +422,7 @@ class SpotifySession():
       return "PYOK RECOMMENDATION NORESULTS"
     else:
       choosen_track = random.choice(tracks['tracks'])
-      self._sp.start_playback(uris=[choosen_track['uri']])
+      self._sp.start_playback(device_id=self._device_id, uris=[choosen_track['uri']])
       name = choosen_track['name']
       artist = choosen_track['artists'][0]['name']
       return "PYOK PLAY " + name + " by " + artist
