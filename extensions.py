@@ -29,6 +29,7 @@ class SpotifyExtension(Extension):
 
   def execute(self, context, data):   
     params = [x.strip().lower() for x in data.split(',')]
+    YLogger.debug(context, f"Received command {' '.join(params)}")
 
     if params[0] == "close":
       os.remove('session.pickle')
@@ -70,7 +71,7 @@ class SpotifyExtension(Extension):
       fail = f"PYFAIL INVALIDCOMMAND {params[0].replace('_', '').upper()}"
 
     except Exception as ex:
-      YLogger.exception_nostack(context, f"Spotify extension fail with {cmd}", ex)
+      YLogger.exception(context, f"Spotify extension fail with {cmd}", ex)
       fail = "PYFAIL ERROR"
 
     with open('session.pickle', 'wb') as file:
