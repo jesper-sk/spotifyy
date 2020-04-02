@@ -1,0 +1,53 @@
+Generic:
+  EXIT
+  LOGINFIRST
+  fail:
+    FAIL ERROR
+    FAIL INVALIDCOMMAND [command]
+
+Spotifyy:
+  fail:
+    FAIL SPOTIFYY [reason] [command] 
+    reason:
+      GENERIC
+      NODEVICE
+      RESTRICTIONVIOLATED
+      INVALIDREQUEST
+      TOKENEXPIRED
+    command: 
+      eerste parameter uit <extension>
+
+Login:
+  ok:
+    OK LOGIN
+  fail:
+    FAIL LOGIN NONAME
+    FAIL LOGIN + message
+    FAIL LOGIN
+
+Playback:
+  ok:
+    OK PLAYB
+    OK PAUSE
+    OK SHUFFLE + enabled state
+    OK REPEAT + enabled state
+    OK CURRPLAYB + currently playing
+
+Playlist mod:
+  ok:
+    OK ADD + song added
+
+Querying:
+  ok:
+    OK PLAY + currently playing
+    OK FIND + no. results found
+  fail:
+    FAIL FIND INVALIDTYPE
+    FAIL FIND NORESULTS
+
+
+Print:
+  ok:
+    OK PRINTRESULTS
+
+

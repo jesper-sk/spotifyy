@@ -30,14 +30,13 @@ class SpotifySession():
     try:
       if len(uname) == 0:
         try:
-          file = open("uname.txt", "r")
-          uname = file.read()
-          file.close()
+          with open('uname.txt', 'r') as file:
+            uname=file.read()
         except FileNotFoundError:
-          return "LOGINFAILNONAME"
+          return "PYFAIL LOGIN NONAME"
 
       if self.is_logged_in and _username == uname:
-        return "LOGINOK"
+        return "PYOK LOGIN"
 
       token = util.prompt_for_user_token( username=uname
                                         , scope='ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control playlist-read-collaborative playlist-modify-public playlist-read-private playlist-modify-private user-library-modify user-library-read user-top-read user-read-playback-position user-read-recently-played user-follow-read user-follow-modify'
@@ -47,52 +46,51 @@ class SpotifySession():
                                         )
       if token:
         self._sp = spotipy.Spotify(auth=token)
-        file = open("uname.txt", "w")
-        file.write(uname)
-        file.close()
-        return "LOGINOK"
+        with open("uname.txt", "w") as file:
+          file.write(uname)
+        return "PYOK LOGIN"
 
       else:
-        return "LOGINFAIL The authentication procedure was interrupted"
+        return "PYFAIL LOGIN The authentication procedure was interrupted"
 
     except Exception as fail:
-      return "LOGINFAIL"
+      return "PYFAIL LOGIN"
 
   def play(self):
     self._sp.start_playback()
-    return "PLAYBOK"
+    return "PYOK PLAYB"
 
   def pause(self):
     self._sp.pause_playback()
-    return "PAUSEOK"
+    return "PYOK PAUSE"
 
   def next_track(self):
     self._sp.next_track()
-    return "PLAYBOK"
+    return "PYOK PLAYB"
 
   def prev_track(self):
     self._sp.previous_track()
-    return "PLAYBOK"
+    return "PYOK PLAYB"
 
   def shuffle(self, state):
     stb = state == "on"
     self._sp.shuffle(stb)
-    return "SHUFFLEOK " + state
+    return "PYOK SHUFFLE " + state.upper()
 
   def repeat(self, state):
     self._sp.repeat(state)
-    return "REPEATOK " + state.upper()
+    return "PYOK REPEAT " + state.upper()
 
   def add_curr_to_fav(self):
     d = self._sp.current_playback()
     self._sp.current_user_saved_tracks_add([d['item']['uri']])
-    return "ADDOK " + d['item']['name'] + " by " + d['item']['artists'][0]['name']
+    return "PYOK ADD " + d['item']['name'] + " by " + d['item']['artists'][0]['name']
 
   def current_playback(self):
     playing = self._sp.current_playback()
     name = playing['item']['name']
     artist = playing['item']['artists'][0]['name']
-    return "CURRPLAYBOK " + name + " by " + artist
+    return "PYOK CURRPLAYB " + name + " by " + artist
 
   def play_from_query(self, index=-1):
     if index >= 0:
@@ -108,7 +106,7 @@ class SpotifySession():
     playing = self._sp.current_playback()
     name = playing['item']['name']
     artist = playing['item']['artists'][0]['name']
-    return "PLAYOK " + name + " by " + artist
+    return "PYOK PLAY " + name + " by " + artist
 
   def play_next_from_query(self):
     self.play_from_query(index=self._query_index+1)
@@ -116,7 +114,7 @@ class SpotifySession():
   def find(self, query, kind, offset=0, limit=10, play=0):
     kind = kind.strip()
     if not (kind in ["track", "album", "artist", "playlist"]):
-      return "FINDFAILTYPE"
+      return "PYFAIL FIND INVALIDTYPE"
 
     self._query_index = 0
     self._query_kind = kind
@@ -129,12 +127,12 @@ class SpotifySession():
 
     self._query_nresults = len(self._query_results)
     if (self._query_nresults) == 0:
-      return "FINDFAILNORESULTS"
+      return "PYFAIL FIND NORESULTS"
 
     if play:
       return self.play_from_query()
     else:
-      return "FINDOK " + str(self._query_nresults)
+      return "PYOK FIND " + str(self._query_nresults)
 
   def print_query_result(self, page=-1):
     if page == -1:
@@ -158,32 +156,8 @@ class SpotifySession():
       print('\n'.join([str(index+1) + ': ' + x['name'] + " by " + x['artists'][0]['name'] 
         for (index, x) in enumerate(self._query_results[start:end])]))
 
-    return "PRINTRESULTSOK"
+    return "PYOK PRINTRESULTS"
 
   def print_next_query_page(self):
     self._query_page += 1
-    self.print_query_result()
-
-  def test(self):
-    self._test += 1
-    return str(self._test)
-
-  def execute(self, context, data):
-    params = [x.strip().lower() for x in data.split(',')]
-
-    if (not self.is_logged_in) and params[0] != "login":
-      try:
-        file = open("uname.txt", "r")
-        file.close()
-      except FileNotFoundError:
-        pass
-        #return "LOGIN FIRST"
-
-    if self.is_logged_in:
-      pass
-      #TODO: Check if token expired and refresh if so
-
-    cmd = 'self.' + params[0] + '(' + ','.join(params[1:]) + ')'
-
-    #TODO: tryexcept (ERR-FAIL)
-    return eval(cmd)
+    return self.print_query_result()
