@@ -483,16 +483,6 @@ class SpotifySession():
       return "PYOK RECOMMEND PLAY " +  name + " by " + artist
     else:
       return "PYOK RECOMMEND " + str(self._query_nresults)
-    # tracks = self._sp.recommendations(seed_genres=[genre])
-
-    # if len(tracks['tracks']) == 0:
-    #   return "PYOK RECOMMENDATION NORESULTS"
-    # else:
-    #   choosen_track = random.choice(tracks['tracks'])
-    #   self._sp.start_playback(device_id=self._device_id, uris=[choosen_track['uri']])
-    #   name = choosen_track['name']
-    #   artist = choosen_track['artists'][0]['name']
-    #   return "PYOK RECOMMEND " + name + " by " + artist
 
   def get_artists_seed(self, artists):
     if artists == None or str(artists).strip() == "":
