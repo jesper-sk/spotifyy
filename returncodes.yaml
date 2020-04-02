@@ -59,5 +59,6 @@ Devices:
 Print:
   PYOK:
     PYOK PRINTRESULTS
+    PYOK NOMORERESULTS
 
 

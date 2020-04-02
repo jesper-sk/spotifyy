@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import random
+import datetime
 
 import spotipy
 import spotipy.util as util
@@ -15,6 +16,7 @@ class SpotifySession():
   ########
   def __init__(self):
     self._sp = None
+    self._token_time = None
     self._test = 0
 
     self._query_results = None
@@ -93,6 +95,7 @@ class SpotifySession():
                                         )
       if token:
         self._sp = spotipy.Spotify(auth=token)
+        self._token_time = datetime.datetime.now()
         with open("uname.txt", "w") as file:
           file.write(uname)
         return "PYOK LOGIN"
@@ -132,6 +135,12 @@ class SpotifySession():
 
     else:
       return "PYOK LOGOUT ALREADYLOGGEDOUT"
+
+  def is_token_expired(self):
+    res = (datetime.datetime.now() - self._token_time).seconds >= 3600
+    if res:
+      self.is_logged_in = False
+    return res
 
   ##############################
   # DEVICE CONTROL & SELECTION #
@@ -358,13 +367,13 @@ class SpotifySession():
 
     else:
         options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
-                ,"SAD" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
-                ,"RELAX" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
-                ,"ANGRY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
-                ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
-                ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
-                ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
-                }
+                  ,"SAD" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
+                  ,"RELAX" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
+                  ,"ANGRY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
+                  ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
+                  ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
+                  ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
+                  }
         cmd, mess = options[emotion]
         exec(cmd)
         self.shuffle("on")
@@ -425,7 +434,7 @@ class SpotifySession():
       return "PYOK RECOMMENDATION NORESULTS"
     else:
       choosen_track = random.choice(tracks['tracks'])
-      self._sp.start_playback(uris=[choosen_track['uri']])
+      self._sp.start_playback(device_id=self._device_id, uris=[choosen_track['uri']])
       name = choosen_track['name']
       artist = choosen_track['artists'][0]['name']
       return "PYOK PLAY " + name + " by " + artist

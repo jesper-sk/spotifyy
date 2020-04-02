@@ -40,15 +40,11 @@ class SpotifyExtension(Extension):
       retry = True
       params = params[1:]
 
-    if (not self.session.is_logged_in) and params[0] != "login":
+    if ((not self.session.is_logged_in) or self.session.is_token_expired()) and params[0] != "login":
       if os.path.isfile('uname.txt'):
         self.session.login()
       else:
         return "LOGINFIRST"
-
-    if self.session.is_logged_in:
-      pass
-      #TODO: Check if token expired and refresh if so
 
     cmd = 'self.session.' + params[0] + '(' + ','.join(params[1:]) + ')'
 
@@ -84,10 +80,11 @@ class SpotifyExtension(Extension):
       if os.path.isfile('latestfail.txt'):
         with open('latestfail.txt', 'r') as file:
           cmd = file.read()
-          try:
-            return eval(cmd)
-          except:
-            pass
+        os.remove('latestfail.txt')
+        try:
+          return eval(cmd)
+        except:
+          pass
 
 
     if succeeded:
