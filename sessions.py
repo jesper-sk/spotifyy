@@ -28,30 +28,6 @@ class SpotifySession():
     #print("SpotifySession initialized.")
 
 
-  #################################
-  ### EXECUTE, MAIN ENTRY POINT ###
-  #################################
-  def execute(self, context, data):
-    params = [x.strip().lower() for x in data.split(',')]
-
-    if (not self.is_logged_in) and params[0] != "login":
-      try:
-        file = open("uname.txt", "r")
-        file.close()
-      except FileNotFoundError:
-        pass
-        #return "LOGIN FIRST"
-
-    if self.is_logged_in:
-      pass
-      #TODO: Check if token expired and refresh if so
-
-    cmd = 'self.' + params[0] + '(' + ','.join(params[1:]) + ')'
-
-    #TODO: tryexcept (ERR-FAIL)
-    return eval(cmd)
-
-
   ########
   # HELP #
   ########
@@ -168,7 +144,7 @@ class SpotifySession():
   def add_curr_to_saved(self):
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_add(curr_track['item']['uri'])
-    return "PYOK ADD " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
+    return "PYOK ADDTOSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
   def remove_curr_from_saved(self):
     curr_track = self._sp.current_playback()
@@ -267,7 +243,6 @@ class SpotifySession():
         return "EMOTIONFAIL"
 
     else:
-    
         options = {"HAPPY" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
                 ,"SAD" : ("self._sp.start_playback(None, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
                 ,"RELAX" : ("self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
