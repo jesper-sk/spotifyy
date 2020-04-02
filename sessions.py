@@ -168,6 +168,35 @@ class SpotifySession():
     self._test += 1
     return str(self._test)
 
+  def help(self):
+    print("Hello I am SpotBot.")
+    print("I am able to have a conversation with you and control your Spotify.")
+    print("Before you can use my full capabilities you first need to login.")
+
+  def help_login(self):
+    print("I you have not logged in yet, you can either type in  \"login\",")
+    print("I will then ask for you Spotify username with which you can reply: \"my username is [username]\" or \"my spotify username is [username]\".")
+    print("Or you spare yourself some typing and type: \"login [spotify username]\".")
+    print("If the username provided is already registered with me I will take care of the rest.")
+    print("If not, I will direct you to your browser in which you need to give me permission to control your Spotify.")
+    print("When you have given the permission, you will be directed to a webpage that does not seem to work, however I only need the link of that page.")
+    print("You will be prompted to give me an url, it is this url you need to give.")
+    print("When this is done, all should be ok and I will be able to control your Spotify for you.")
+
+  def help_functions(self):
+    print("My main aim is to hold a conversation with you to assist you with Spotify.
+          "If you are logged in I can control your Spotify. I can")
+    print("  Play/Resume your Spotify.")
+    print("  Pause your Spotify.")
+    print("  Skip to the next track.")
+    print("  Go back to the previous track.")
+    print("  Turn shuffle on and off.")
+    print("  Set repeat to track, context or off.")
+    print("  Save the track you are currently listening to.")
+    print("  Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
+    print("  Play a track, album, artist or playlist for you.")
+    print("  Tell you to which song you are currently listening.")
+
   def execute(self, context, data):
     params = [x.strip().lower() for x in data.split(',')]
 
