@@ -161,3 +161,104 @@ class SpotifySession():
   def print_next_query_page(self):
     self._query_page += 1
     return self.print_query_result()
+
+  def test(self):
+    self._test += 1
+    return str(self._test)
+
+  def help(self):
+    print("Hello I am SpotBot.")
+    print("I am able to have a conversation with you and control your Spotify.")
+    print("Before you can use my full capabilities you first need to login.")
+
+  def help_login(self):
+    print("I you have not logged in yet, you can either type in  \"login\",")
+    print("I will then ask for you Spotify username with which you can reply: \"my username is [username]\" or \"my spotify username is [username]\".")
+    print("Or you spare yourself some typing and type: \"login [spotify username]\".")
+    print("If the username provided is already registered with me I will take care of the rest.")
+    print("If not, I will direct you to your browser in which you need to give me permission to control your Spotify.")
+    print("When you have given the permission, you will be directed to a webpage that does not seem to work, however I only need the link of that page.")
+    print("You will be prompted to give me an url, it is this url you need to give.")
+    print("When this is done, all should be ok and I will be able to control your Spotify for you.")
+
+  def help_functions(self):
+    print("My main aim is to hold a conversation with you to assist you with Spotify.
+          "If you are logged in I can control your Spotify. I can")
+    print("  Play/Resume your Spotify.")
+    print("  Pause your Spotify.")
+    print("  Skip to the next track.")
+    print("  Go back to the previous track.")
+    print("  Turn shuffle on and off.")
+    print("  Set repeat to track, context or off.")
+    print("  Save the track you are currently listening to.")
+    print("  Find a track, album, artist or playlist for you. You can then choose which item you want to play from a list of results.")
+    print("  Play a track, album, artist or playlist for you.")
+    print("  Tell you to which song you are currently listening.")
+  
+  def play_track_emotion(self, emotion):
+    # takes as input a string from one of the emotions
+    # returns None if emotion is not known
+    # plays a song with that mood if emotion is known returns
+    emotion = str(emotion).upper()  
+    emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY"]
+    
+    if emotion not in emotion_list:
+        return "EMOTIONFAIL"
+
+    else:
+    
+        options = {"HAPPY" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
+                ,"SAD" : ("self._sp.start_playback(None, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
+                ,"RELAX" : ("self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
+                ,"ANGRY" : ("self._sp.start_playback(None, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
+                ,"SLEEP" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
+                ,"ENERGETIC" : ("self._sp.start_playback(None, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
+                ,"STUDY" : ("self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
+                }
+        cmd, mess = options[emotion]
+        self._sp.shuffle(True, device_id=None)
+        exec(cmd)
+        return "EMOTIONOK"
+  
+  def play_track_positiviy(self, score):
+    score = float(score)
+
+    if score < -0.9:
+        mood = 'EXTREMELY NEGATIVE'
+    if score > -0.9 and score <= -0.7:
+        mood = 'VERY NEGATIVE'
+    if score > -0.7 and score <= -0.5:
+        mood = 'QUITE NEGATIVE'
+    if score > -0.5 and score <= -0.3:
+        mood =  'NEGATIVE'
+    if score > -0.3 and score <= -0.1:
+        mood = 'SOMEWHAT NEGATIVE'
+    if score > -0.1 and score <= 0.1:
+        mood = 'NEUTRAL'
+    if score > 0.1 and score <= 0.3:
+        mood = 'SOMEWHAT POSITIVE'
+    if score > 0.3 and score <= 0.5:
+        mood = 'POSITIVE'
+    if score > 0.5 and score <= 0.7:
+        mood = 'QUITE POSITIVE'
+    if score > 0.7 and score <= 0.9:
+        mood = 'VERY POSITIVE'
+    if score > 0.9:
+        mood = 'EXTREMELY POSITIVE'
+
+    print('You seem {}'.format(mood))
+    if score < 0:
+        self._sp.shuffle(True, device_id=None)
+        self._sp.start_playback(None, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
+        print('This is a song from a Sad-playlist')
+        return "POSITIVITYOK"
+    elif score > 0.1:
+        self._sp.shuffle(True, device_id=None)
+        self._sp.start_playback(None, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a song from a positive
+        print('This is a song from a Positive-playlist')
+        return "POSITIVITYOK"
+    else:
+        self._sp.shuffle(True, device_id=None)
+        self._sp.start_playback(None, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a song from the Relax playlist
+        print('This is a song from a Relax-playlist')
+        return "POSITIVITYOK"
