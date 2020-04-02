@@ -54,7 +54,7 @@ class SpotifyExtension(Extension):
       succeeded = True
 
     except SpotifyException as ex:
-      YLogger.exception_nostack(context, "Spotify exception raised", ex)
+      YLogger.exception(context, "Spotify exception raised", ex)
       message = str(ex).splitlines()[1].strip()
       #YLogger.exception_nostack(context, "Spotify exception raised", message)
 
@@ -66,11 +66,11 @@ class SpotifyExtension(Extension):
       fail = f"PYFAIL SPOTIFYY {code} {params[0].replace('_', '').upper()}"
 
     except (NameError, AttributeError, SyntaxError) as ex:
-      YLogger.exception_nostack(context, f"Couldn't evaluate command {cmd}", ex)
+      YLogger.exception(context, f"Couldn't evaluate command {cmd}", ex)
       fail = f"PYFAIL INVALIDCOMMAND {params[0].replace('_', '').upper()}"
 
     except Exception as ex:
-      YLogger.exception_nostack(context, f"Spotify extension fail with {cmd}", ex)
+      YLogger.exception(context, f"Spotify extension fail with {cmd}", ex)
       fail = "PYFAIL ERROR"
 
     with open('session.pickle', 'wb') as file:
