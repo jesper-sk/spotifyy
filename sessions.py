@@ -240,7 +240,7 @@ class SpotifySession():
         mood = 'EXTREMELY POSITIVE'
 
     print('You seem {}'.format(mood))
-    if score < 0:
+    if score < -0.1:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(None, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
         print('This is a song from a Sad-playlist')
