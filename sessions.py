@@ -324,7 +324,7 @@ class SpotifySession():
     self._query_results = q[kind+'s']['items']
 
     self._query_nresults = len(self._query_results)
-    if (self._query_nresults) == 0:
+    if self._query_nresults == 0:
       return "PYFAIL FIND NORESULTS"
 
     if play and kind == "track":
@@ -455,17 +455,106 @@ class SpotifySession():
   ###################
   # RECOMMENDATIONS #
   ###################
-  def recommendations(self, genre = None):
-    genre = str(genre).strip()
-    tracks = self._sp.recommendations(seed_genres=[genre])
-    if len(tracks['tracks']) == 0:
-      return "PYOK RECOMMENDATION NORESULTS"
+  def recommend(self, artists=None, genres=None, tracks=None, limit=20, play=0):
+    artists_seed = get_artists_seed(artists)    
+    genres_seed = get_genres_seed(genres)
+    tracks_seed = get_tracks_seed(tracks)
+
+    self._query_index = 0
+    self._query_kind = "track"
+    self._query = ""
+    self._offset = 0
+    self._query_page = 0
+
+    tracks = self._sp.recommendations(seed_artists=artists_seed, seed_genres=genres_seed, seed_tracks=tracks_seed, limit=limit)
+    self._query_results = tracks['tracks']
+
+    self._query_nresults = len(self._query_results)
+    if self._query_nresults == 0:
+      return "PYFAIL RECOMMEND NORESULTS"
+    elif play:
+      self._sp.start_playback(self._device_id, uris=enumerate(self._query_results['uri']))
+      name = self._query_results[0]['name']
+      artist = self._query_results[0]['artists'][0]['name']
+      return "PYOK RECOMMEND PLAY " +  name + " by " + artist
     else:
-      choosen_track = random.choice(tracks['tracks'])
-      self._sp.start_playback(device_id=self._device_id, uris=[choosen_track['uri']])
-      name = choosen_track['name']
-      artist = choosen_track['artists'][0]['name']
-      return "PYOK PLAY " + name + " by " + artist
+      return "PYOK RECOMMEND " + str(self._query_nresults)
+    # tracks = self._sp.recommendations(seed_genres=[genre])
+
+    # if len(tracks['tracks']) == 0:
+    #   return "PYOK RECOMMENDATION NORESULTS"
+    # else:
+    #   choosen_track = random.choice(tracks['tracks'])
+    #   self._sp.start_playback(device_id=self._device_id, uris=[choosen_track['uri']])
+    #   name = choosen_track['name']
+    #   artist = choosen_track['artists'][0]['name']
+    #   return "PYOK RECOMMEND " + name + " by " + artist
+
+  def get_artists_seed(self, artists):
+    if artists == None or str(artists).strip() == "":
+      return None
+    else:
+      artist_seed = []
+      for artist in str(artists).split(','):
+        res = self._sp.search(artist, limit=1, type="artists")
+        artist_seed = artist_seed.append(res['artists'][0]['items']['id']) if len(res['items']) > 0 else artist_seed
+      
+      if len(artist_seed) == 0:
+        return None
+      else:
+        return artist_seed[:-1]
+
+  def get_genres_seed(self, genres):
+    if genres == None or str(genres).strip() == "":
+      return None
+    else:
+      genre_seed = genre_seed.append(genre for genre in str(genres).split(','))
+      if len(genre_seed) == 0:
+        return None
+      else:
+        return genre_seed
+
+  def get_tracks_seed(self, tracks):
+    if tracks == None or str(tracks).strip() == "":
+      return None
+    else:
+      track_seed = []
+      for track in str(tracks).split(','):
+        res = self._sp.search(track, limit=1, type="track")
+        track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
+      
+      if len(track_seed) == 0:
+        return None
+      else:
+        return track_seed[:-1]
+
+
+  def recommended_artists(self, ref_artist, play=0):
+    ref_artist = str(ref_artist).strip()
+    found_artist = self._sp.search(ref_artist, limit=1, type="artist")
+
+    if len(found_artist['artists']) == 0:
+      return "PYFAIL RECOMMENDARTIST NORESULT"
+
+    self._query_index = 0
+    self._query_kind = "artist"
+    self._query = ""
+    self._offset = 0
+    self._query_page = 0
+
+    found_artist = found_artist['artists'][0]
+    related_artists = self._sp.artist_related_artists(found_artist['items']['id'])
+
+    if len(related_artists['artists']) == 0:
+      return "PYFAIL RECOMMENDARTIST NORESULT"
+
+    self._query_results = random.shuffle(related_artists)['artists']
+    self._query_nresults = len(self._query_results)
+
+    if play:
+      return self.play_from_query()
+    else:
+      return "PYOK RECOMMENDARTIST " + str(self._query_nresults)
 
 
   ########
