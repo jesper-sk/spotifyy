@@ -337,7 +337,7 @@ class SpotifySession():
         mood = 'EXTREMELY POSITIVE'
 
     print('You seem {}'.format(mood))
-    if score < 0:
+    if score < -0.1:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(None, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
         print('This is a song from a Sad-playlist')
@@ -353,6 +353,24 @@ class SpotifySession():
         print('This is a song from a Relax-playlist')
         return "POSITIVITYOK"
 
+  ###################
+  # RECOMMENDATIONS #
+  ###################
+  def recommendations(self, genre = None):
+    if genre is None:
+      dic = self._sp.recommendation_genre_seeds()
+      for element in dic['genres']:
+        print(element.strip("'"), end='')
+        print(' - ', end='')
+      print('/n')
+      return
+    else:
+      dic = self._sp.recommendation_genre_seeds()
+      print(genre)
+      track = self._sp.recommendations(None, ['soul'])
+      self._sp.start_playback(track)
+      print(track)
+      return 'hoi'
 
   ########
   # TEST #
