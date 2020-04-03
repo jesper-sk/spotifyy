@@ -280,7 +280,9 @@ class SpotifySession():
       self._query_index = int(index) - 1
 
     if self._query_kind == "track":
-      self._sp.start_playback(device_id=self._device_id, uris=[self._query_results[self._query_index]['uri']])
+      #self._sp.start_playback(device_id=self._device_id, uris=[self._query_results[self._query_index]['uri']])
+      self._sp.add_to_queue(device_id=self._device_id, uri=self._query_results[self._query_index]['uri'])
+      self.next_track()
     else:
       self._sp.start_playback(device_id=self._device_id, context_uri=self._query_results[self._query_index]['uri'])
 
@@ -470,8 +472,12 @@ class SpotifySession():
     else:
       artist_seed = []
       for artist in str(artists).split(';'):
-        res = self._sp.search(artist.strip(), limit=1, type="artists")
-        artist_seed = artist_seed.append(res['artists'][0]['items']['id']) if len(res['items']) > 0 else artist_seed
+        #print(artist)
+        res = self._sp.search(artist.strip(), limit=1, type="artist")
+        #print(res)
+        if len(res['artists']['items']) > 0:
+          artist_seed.append(res['artists']['items'][0]['id'])
+        #artist_seed = artist_seed.append(res['artists']['items'][0]['id']) if len(res['artists']['items']) > 0 else artist_seed
       
       if len(artist_seed) == 0:
         return None
@@ -495,7 +501,9 @@ class SpotifySession():
       track_seed = []
       for track in str(tracks).split(';'):
         res = self._sp.search(track.strip(), limit=1, type="track")
-        track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
+        if len(res['tracks']['items']) > 0:
+          track_seed.append(res['tracks']['items']['id'])
+        #track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
       
       if len(track_seed) == 0:
         return None
