@@ -1,30 +1,20 @@
-from setuptools import setup, find_packages
+import setuptools
 
-with open('README.md') as readme_file:
-    README = readme_file.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-with open('HISTORY.md') as history_file:
-    HISTORY = history_file.read()
-
-setup_args = dict(
-    name='spotifyy',
-    version='0.1.0',
-    description='Spotify interface used for Spotbot',
+setuptools.setup(
+    name="spotifyy", # Replace with your own username
+    version="0.1.1",
+    author="Saltpile123",
+    author_email="ikhoudvanberichten@gmail.com",
+    description="Spotify interface used by Spotbot",
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    long_description=README + '\n\n' + HISTORY,
-    license='MIT',
-    packages=find_packages(),
-    author='Saltpile123',
-    author_email='',
-    keywords=['spotify', 'aiml', 'spotbot', 'spotifyy'],
-    url='https://github.com/JesperK123456/spotifyy',
-    download_url='https://pypi.org/project/spotifyy/'
+    url="https://github.com/JesperK123456/spotifyy",
+    packages=setuptools.find_packages(),
+    classifiers=[
+        "Programming Language :: Python :: 3"
+    ],
+    python_requires='>=3.6',
 )
-
-install_requires = [
-    'spotipy>=2.10.0',
-    'programy>=4.1.5'
-]
-
-if __name__ == '__main__':
-    setup(**setup_args, install_requires=install_requires)
