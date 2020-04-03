@@ -47,7 +47,7 @@ class SpotifySession():
     print("For me to work optimally I want you to be a friendly person and always speak in multiple words, except when I ask very specific questions like yes/no-questions.")
     print("If I still don't understand you, you may need to be more specific in your answer, e.g.:")
     print("me: Do you have a specific genre in mind?")
-    print("you: [The genre is [name of the genre]]")
+    print("you: [The genre is called [name of the genre]]")
     print("")
     print("You can use [what can I do with [name of topic]] for certain topics to get more information about that topic. I can help you with the following topics:")
     print("-[functions]: This shows you information about most of my commands.")
@@ -131,7 +131,7 @@ class SpotifySession():
     Returns:
       - "PYFAIL LOGIN NONAME" - No username was provided and no username was saved.
       - "PYFAIL LOGIN" - Something went wrong trying to log the user in.
-      - "PYOK LOGIN" - User is logged in succesfully.
+      - "PYOK LOGIN" - User is logged in successfully.
     '''
     try:
       if len(uname) == 0:
@@ -174,7 +174,7 @@ class SpotifySession():
 
       Returns:
         - "PYFAIL" - Something went wrong.
-        - "PYOK LOGOUT" - User was logged out succesfully.
+        - "PYOK LOGOUT" - User was logged out successfully.
     '''
     saved_uname = "_"
     try:
@@ -237,7 +237,7 @@ class SpotifySession():
       Refreshes the available playback devices and prints them.
 
       Returns:
-        - "PYOK DEVICESREFRESH [number of availble devices]" - Devices refreshed succesfully and the number of currently available devices.
+        - "PYOK DEVICESREFRESH [number of availble devices]" - Devices refreshed successfully and the number of currently available devices.
     '''
     self._available_devices = self._sp.devices()['devices']
     n = len(self._available_devices)
@@ -256,7 +256,7 @@ class SpotifySession():
       Returns:
         - "PYOK SETDEVICE NONE" - Current active device set to no device.
         - "PYFAIL SETDEVICE OUTOFRANGE [number of available devices]" - The item to select is not in the rang of the amount of available devices.
-        - "PYOK SETDEVICE [device name]" - The currently active playback device is succesfully set and its name.
+        - "PYOK SETDEVICE [device name]" - The currently active playback device is successfully set and its name.
     '''
     if index < 0:
       self._device = None
@@ -292,7 +292,7 @@ class SpotifySession():
       Resumes the Spotify playback.
 
       Returns:
-        - "PYOK PLAYB" - Playback succesfully changed.
+        - "PYOK PLAYB" - Playback successfully changed.
     '''
     self._sp.start_playback(self._device_id)
     return "PYOK PLAYB"
@@ -303,7 +303,7 @@ class SpotifySession():
       Pauses the Spotify playback.
 
       Returns:
-        - "PYOK PAUSE" - Playback succesfully paused.
+        - "PYOK PAUSE" - Playback successfully paused.
     '''
     self._sp.pause_playback(self._device_id)
     return "PYOK PAUSE"
@@ -314,7 +314,7 @@ class SpotifySession():
       Sets the Spotify playback to the next track.
 
       Returns:
-        - "PYOK PLAYB" - Playback succesfully changed.
+        - "PYOK PLAYB" - Playback successfully changed.
     '''
     self._sp.next_track(self._device_id)
     return "PYOK PLAYB"
@@ -325,7 +325,7 @@ class SpotifySession():
       Sets the Spotify playback to the previous track.
 
       Returns:
-        - "PYOK PLAYB" - Playback succesfully changed.
+        - "PYOK PLAYB" - Playback successfully changed.
     '''
     self._sp.previous_track(self._device_id)
     return "PYOK PLAYB"
@@ -336,7 +336,7 @@ class SpotifySession():
       Sets the Spotify playback to the start of the current playing track.
 
       Returns:
-        - "PYOK PLAYB" - Playback succesfully changed.
+        - "PYOK PLAYB" - Playback successfully changed.
     '''
     self._sp.seek_track(0)
     return "PYOK PLAYB"
@@ -349,7 +349,7 @@ class SpotifySession():
         - state - "on" or "off"
 
       Returns:
-      - "PYOK SHUFFLE [new state]" - Shuffle state succesfully changed to new state and the new state name.
+        - "PYOK SHUFFLE [new state]" - Shuffle state successfully changed to new state and the new state name.
     '''
     stb = state == "on"
     self._sp.shuffle(stb, self._device_id)
@@ -364,10 +364,21 @@ class SpotifySession():
         - state - "track", "context" or "off"
 
       Returns:
-      - "PYOK PLAYB" - Playback succesfully changed.
+        - "PYOK PLAYB" - Playback successfully changed.
     '''
     self._sp.repeat(state, self._device_id)
     return "PYOK REPEAT " + state.upper()
+
+
+  def current_volume(self):
+    '''
+      Returns the current volume.
+
+      Returns:
+        - "PYOK PLAYB" - Playback successfully changed.
+    '''
+    volume = self._sp.current_playback()['device']['volume_percent']
+    return "PYOK VOLUME " + str(volume)
 
 
   def change_volume(self, increase=0, step=10):
@@ -379,7 +390,7 @@ class SpotifySession():
         - step - percentage (in full percent or as floating point value between 0-1) to de- or increase the volume with.
 
       Returns:
-      - "PYOK VOLUME [new volume value]" - Volume succesfully changed and the new volume percentage.
+        - "PYOK VOLUME [new volume value]" - Volume successfully changed and the new volume percentage.
     '''
     step = int(str(step).strip())
     if 0 < step < 1:
@@ -406,8 +417,11 @@ class SpotifySession():
         - volume - The new volume percentage (in full percent or as floating point value between 0-1).
 
       Returns:
-      - "PYOK VOLUME [new volume value]" - Volume succesfully set and the new volume percentage.
+        - "PYOK VOLUME [new volume value]" - Volume successfully set and the new volume percentage.
     '''
+    if not str(volume.isdigit()):
+      return "PYFAIL INVALID VOLUME"
+
     volume = float(volume)
     if 0 < volume < 1:
       volume = volume * 100
@@ -457,7 +471,7 @@ class SpotifySession():
       Adds the currently playing track to the users Spotify Music Library.
 
       Returns:
-        - "PYOK ADDTOSAVED [name of track] by [name of artist]" - The currently playing track is succesfully added to the users Spotify Music Library.
+        - "PYOK ADDTOSAVED [name of track] by [name of artist]" - The currently playing track is successfully added to the users Spotify Music Library.
 	  '''
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_add([curr_track['item']['uri']])
@@ -469,7 +483,7 @@ class SpotifySession():
       Removes the currently playing track from the users Spotify Music Library.
 
       Returns:
-        - "PYOK REMOVEFROMSAVED [name of track] by [name of artist]" - The currently playing track is succesfully removed from the users Spotify Music Library.
+        - "PYOK REMOVEFROMSAVED [name of track] by [name of artist]" - The currently playing track is successfully removed from the users Spotify Music Library.
 	  '''
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_delete([curr_track['item']['uri']])
@@ -490,7 +504,7 @@ class SpotifySession():
         - index - The index of the item to play.
 
       Returns:
-        - "PYOK PLAY [name of item] by [name of owner of item]" - Succesfully started playback of the requested item.
+        - "PYOK PLAY [name of item] by [name of owner of item]" - successfully started playback of the requested item.
 	  '''
     if index > 0:
       self._query_index = int(index) - 1 # Humans are 1-based.
@@ -525,8 +539,8 @@ class SpotifySession():
         - play - 0 to just enqueue the track, 1 to immediately start playing this track.
 
       Returns:
-        - "PYOK ENQUEUE [name of track] by [name of artist]" - Succesfully enqueued the track.
-        - "PYOK PLAY [name of track] by [name of artist]" - Succesfully started playback of the track.
+        - "PYOK ENQUEUE [name of track] by [name of artist]" - successfully enqueued the track.
+        - "PYOK PLAY [name of track] by [name of artist]" - successfully started playback of the track.
 
         !!! This function can only enqueue tracks due to the Spotify API !!!
 	  '''
@@ -795,8 +809,8 @@ class SpotifySession():
       Returns:
         - "PYFAIL RECOMMEND INVALIDTYPE" - The type of recommendation reference is not a valid type.
         - "PYFAIL RECOMMEND NORESULTS" - No recommendations could be found. Make sure the reference is not too specific.
-        - "PYOK PLAY [name of track] by [name of artist]" - Playback of first recommendation has been started succesfully.
-        - "PYOK FIND [number of recommendations]" - Recommendations have been succesfully found and the number of recommendations.
+        - "PYOK PLAY [name of track] by [name of artist]" - Playback of first recommendation has been started successfully.
+        - "PYOK FIND [number of recommendations]" - Recommendations have been successfully found and the number of recommendations.
     '''
     kind = kind.strip()
     if not (kind in ["track", "artist", "genre"]):
@@ -865,7 +879,7 @@ class SpotifySession():
       Returns:
         - "PYFAIL RECOMMENDARTIST ARTISTNOTFOUND [name of reference artist]" - The reference artist could not be found.
         - "PYFAIL RECOMMENDARTIST NORELATEDFOUND [name of reference artist]" - No related artists could be found for this reference artist.
-        - "PYOK FIND [number of results]" - Related artists have been found succesfully and the number of results.
+        - "PYOK FIND [number of results]" - Related artists have been found successfully and the number of results.
         - Return value from play_from_query() - When play == 1.
     '''
     ref_artist = str(ref_artist).strip()
