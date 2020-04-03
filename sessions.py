@@ -391,6 +391,10 @@ class SpotifySession():
     curr_playback = self._sp.current_playback()
     new_volume = curr_playback['device']['volume_percent']
     new_volume = new_volume - step if increase == 0 else new_volume + step 
+    if new_volume > 100:
+      new_volume = 100
+    elif new_volume < 0:
+      new_volume = 0
     return(self.set_volume(new_volume))
 
 
@@ -627,7 +631,7 @@ class SpotifySession():
         return "PYOK NOMORERESULTS"
 
     if self._query_kind == "playlist":
-      print('\n'.join([str((index+1)+(page*5)) + ': ' + x['name'] + ", owned by " + x['owner']['id'] 
+      print('\n'.join([str((index+1)+(page*5)) + ': ' + x['name'] + ", owned by " + x['owner']['display_name'] 
         for (index, x) in enumerate(self._query_results[start:end])]))
 
     elif self._query_kind == "artist":
