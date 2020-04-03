@@ -66,6 +66,7 @@ Print:
 Recommend:
   PYFAIL:
     PYFAIL RECOMMEND NORESULTS
+    PYFAIL RECOMMEND GENREUNKNOWN, Genre provided is not currently available genre in Spotify.
     PYFAIL RECOMMENDARTIST ARTISTNOTFOUND + artist
     PYFAIL RECOMMENDARTIST NORELATEDFOUND + artist
     
