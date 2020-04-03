@@ -555,7 +555,7 @@ class SpotifySession():
       Returns:
         - The return value of play_from_query() - 
 	  '''
-    return self.play_from_query(index=self._query_index+1)
+    return self.play_from_query(index=self._query_index+2)
 
 
   def find(self, query, kind, offset=0, limit=10, play=0, enqueue=0):
@@ -799,7 +799,7 @@ class SpotifySession():
         - "PYOK FIND [number of recommendations]" - Recommendations have been succesfully found and the number of recommendations.
     '''
     kind = kind.strip()
-    if not (kind in ["track", "artist", "playlist"]):
+    if not (kind in ["track", "artist", "genre"]):
       return "PYFAIL RECOMMEND INVALIDTYPE " + kind
 
     self._query_limit = limit
@@ -845,9 +845,7 @@ class SpotifySession():
       return "PYFAIL RECOMMEND NORESULTS"
     elif play:
       self._sp.start_playback(self._device_id, uris=[x['uri'] for x in self._query_results])
-      name = self._query_results[0]['name']
-      artist = self._query_results[0]['artists'][0]['name']
-      return "PYOK PLAY " +  name + " by " + artist
+      return "PYOK PLAY " + self._query_results[0]['name'] + " by " + self._query_results[0]['artists'][0]['name']
     else:
       return "PYOK FIND " + str(self._query_nresults)
 
