@@ -694,7 +694,6 @@ class SpotifySession():
         - "PYFAIL EMOTION" - Emotion is not a valid emotion.
         - "PYOK EMOTION" - Emotion was found and the playback of a suitable playlist has been started.
     '''
-    
     emotion = str(emotion).upper()  
     emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY", "PARTY", "CHILL", "LOVESICK", "HOLIDAY", "ROADTRIP" ]
     
