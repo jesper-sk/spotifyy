@@ -505,7 +505,7 @@ class SpotifySession():
       for track in str(tracks).split(';'):
         res = self._sp.search(track.strip(), limit=1, type="track")
         if len(res['tracks']['items']) > 0:
-          track_seed.append(res['tracks']['items']['id'])
+          track_seed.append(res['tracks']['items'][0]['id'])
         #track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
       
       if len(track_seed) == 0:
