@@ -69,6 +69,14 @@ Recommend:
     PYFAIL RECOMMEND GENREUNKNOWN, Genre provided is not currently available genre in Spotify.
     PYFAIL RECOMMENDARTIST ARTISTNOTFOUND + artist
     PYFAIL RECOMMENDARTIST NORELATEDFOUND + artist
+
+Emotions:
+  PYOK:
+    PYOK EMOTION
+    PYOK POSITIVITY
+    PYOK COOLDOWN
+  PYFAIL:
+    PYFAIL EMOTION
     
 
 
