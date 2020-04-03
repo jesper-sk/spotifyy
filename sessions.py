@@ -372,6 +372,9 @@ class SpotifySession():
 
   def print_prev_query_page(self):
     self._query_page -= 1
+    if self._query_page < 0:
+      self._query_page = 0
+      return "PYFAIL NEGATIVEPAGE"
     return self.print_query_result()
 
   
