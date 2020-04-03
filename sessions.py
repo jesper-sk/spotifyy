@@ -392,7 +392,7 @@ class SpotifySession():
     '''
     
     emotion = str(emotion).upper()  
-    emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY"]
+    emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY", "PARTY", "CHILL", "LOVESICK", "HOLIDAY", "ROADTRIP" ]
     
     if emotion not in emotion_list:
         return "EMOTIONFAIL"
@@ -405,6 +405,11 @@ class SpotifySession():
                   ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
                   ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
                   ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
+                  ,"PARTY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX0IlCGIUGBsA')", "What do you think of this song?")
+                  ,"CHILL" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX4WYpdgoIcn6')", "What do you think of this song?")
+                  ,"LOVESICK" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6dm9jZ2p8iGGTLre7nY4hf')", "What do you think of this song?")
+                  ,"HOLIDAY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:1KFOvnwqjeCpYTSC91wM4U')", "What do you think of this song?")
+                  , "ROADTRIP": ("self._sp.start_playback(self._device_id, 'spotify:playlist:27LXgC5xD1s1vpB7E0pA3W')", "What do you think of this song?")
                   }
         cmd, mess = options[emotion]
         exec(cmd)
