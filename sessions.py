@@ -540,10 +540,9 @@ class SpotifySession():
       Returns:
         - "PYFAIL FIND INVALIDTYPE [provided type]" - Provided type is not a valid item type.
         - "PYFAIL FIND NORESULTS" - No results were found.
+        - "PYOK FIND [number of results found]" - 
         - A return value of play_from_query() - If play == 1
-        - A return value of play_from_ - 
-
-        - "PYOK ADDTOSAVED [name of track] by [name of artist]" - 
+        - A return value of enqueue_from_query() - If enqueue == 1- 
 	  '''
     kind = kind.strip()
     if not (kind in ["track", "album", "artist", "playlist"]):
@@ -574,6 +573,16 @@ class SpotifySession():
 
 
   def print_query_result(self, page=-1):
+    '''
+      Prints 5 query results, the indices of these results are [page*5:(page+1)*5]
+
+      Parameters:
+        - page - Which 'page' of results to show. If not provided the last printed page will be printed again.
+
+      Returns:
+        - "PYOK NOMORERESULTS" - No more results to show on the provided page.
+        - "PYOK PRINTRESULTS" - All results from provided page are printed.
+    '''
     if page == -1:
       page = self._query_page
       
@@ -601,11 +610,23 @@ class SpotifySession():
 
 
   def print_next_query_page(self):
+    '''
+      Prints the next page of results.
+
+      Returns:
+        - A return value of print_query_result() -
+    '''
     self._query_page += 1
     return self.print_query_result()
 
 
   def print_prev_query_page(self):
+    '''
+      Prints the previous page of results.
+
+      Returns:
+        - A return value of print_query_result() -
+    '''
     self._query_page -= 1
     if self._query_page < 0:
       self._query_page = 0
@@ -617,6 +638,13 @@ class SpotifySession():
   # EMOTION FUNCTIONS #
   #####################
   def calm_down(self):
+    '''
+      Called when the user needs to calm down because it used profanity or other bad language.  
+      To cool the user down, a random song of the chill playlist will be played.
+
+      Returns:
+        - "PYOK COOLDOWN" - Playback of a calming song was succesfull.
+    '''
     self._sp.start_playback(context_uri='spotify:playlist:37i9dQZF1DWSf2RDTDayIx')
     self.shuffle("on")
     self.next_track()
@@ -625,9 +653,14 @@ class SpotifySession():
 
   def play_track_emotion(self, emotion):
     '''
-      Takes as input a string from one of the emotions.
-      Returns None if emotion is not known.
-      Plays a track with that mood if emotion is known returns.
+      Takes as input a string from one of the emotions.  
+
+      Parameters:
+        - emotion - The emotion of the user, used to pick a suitable playlist.
+      
+      Returns:
+        - "EMOTIONFAIL" - Emotion is not a valid emotion.
+        - "EMOTIONOK" - Emotion was found and the playback of a suitable playlist has been started.
     '''
     
     emotion = str(emotion).upper()  
@@ -658,6 +691,15 @@ class SpotifySession():
   
 
   def play_track_positivity(self, score):
+    '''
+      Play a suitable track based on the postivity score measured by the sentiment module in the NLTK module.
+
+      Parameters:
+        - score - The positivity score of the conversation with the user.
+
+      Returns:
+        - "POSITIVITYOK" - A suitable playlist was found and the playback has been started.
+    '''
     score = float(score)
 
     if score < -0.9:
@@ -705,6 +747,22 @@ class SpotifySession():
   # RECOMMENDATIONS #
   ###################
   def recommend(self, query="", kind="track", limit=20, play=0):
+    '''
+      Finds recommended tracks based on the query and kind provided.  
+      It can either print the results to let the user pick a track or start playing the results immediately.
+
+      Parameters:
+        - query - A 'track', an 'artist' or a 'playlist' to use as reference for the recommendation function.
+        - kind - The type of query that is given.
+        - limit - The amount of items to recommend.
+        - play - 0 to print the results. 1 to start playing them immediately.
+
+      Returns:
+        - "PYFAIL RECOMMEND INVALIDTYPE" - The type of recommendation reference is not a valid type.
+        - "PYFAIL RECOMMEND NORESULTS" - No recommendations could be found. Make sure the reference is not too specific.
+        - "PYOK PLAY [name of track] by [name of artist]" - Playback of first recommendation has been started succesfully.
+        - "PYOK FIND [number of recommendations]" - Recommendations have been succesfully found and the number of recommendations.
+    '''
     kind = kind.strip()
     if not (kind in ["track", "artist", "playlist"]):
       return "PYFAIL RECOMMEND INVALIDTYPE " + kind
@@ -740,7 +798,8 @@ class SpotifySession():
       found_track = self._sp.search(query.strip(), limit=1, type="track")
       if len(found_track['tracks']['items']) > 0:
         tracks = self._sp.recommendations(seed_tracks=[found_track['tracks']['items'][0]['id']], limit=self._query_limit)
-      tracks = self.get_track_recommendations(query)
+      else:
+        return "PYFAIL RECOMMEND NORESULTS"
 
     else:
       return "PYFAIL RECOMMEND NORESULTS"
@@ -760,6 +819,23 @@ class SpotifySession():
 
 
   def get_recommended_artists(self, ref_artist, play=0):
+    '''
+      This functions returns a list of recommended artists for a certain artist.  
+      These artists correspond to the artists shown in "Fans Also Like" when viewing an artist in Spotify.  
+      Most times this are 20 artists.
+
+      A random related artist can be played immediately or all results can be returned.
+
+      Parameters:
+        - ref_artist - The reference artist to get related artists from.
+        - play - 0 to print results, 1 to immediately start playing a random related artist.
+
+      Returns:
+        - "PYFAIL RECOMMENDARTIST ARTISTNOTFOUND [name of reference artist]" - The reference artist could not be found.
+        - "PYFAIL RECOMMENDARTIST NORELATEDFOUND [name of reference artist]" - No related artists could be found for this reference artist.
+        - "PYOK FIND [number of results]" - Related artists have been found succesfully and the number of results.
+        - Return value from play_from_query() - When play == 1.
+    '''
     ref_artist = str(ref_artist).strip()
     if ref_artist == "":
       return "PYFAIL RECOMMENDARTIST ARTISTNOTFOUND" + ref_artist
@@ -795,5 +871,10 @@ class SpotifySession():
   # TEST #
   ########
   def test(self):
-    '''For testing purposes only'''
+    '''
+      For testing purposes only
+
+        !!! DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING !!!
+        !!! ALSO, DO NOT DELETE, THIS WILL BREAK THE CODE !!!
+    '''
     return "PYOK"
