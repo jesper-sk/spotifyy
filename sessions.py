@@ -464,10 +464,49 @@ class SpotifySession():
   ###################
   # RECOMMENDATIONS #
   ###################
+  def get_artists_seed(self, artists):
+    if artists == None or str(artists).strip() == "":
+      return None
+    else:
+      artist_seed = []
+      for artist in str(artists).split(';'):
+        res = self._sp.search(artist.strip(), limit=1, type="artists")
+        artist_seed = artist_seed.append(res['artists'][0]['items']['id']) if len(res['items']) > 0 else artist_seed
+      
+      if len(artist_seed) == 0:
+        return None
+      else:
+        return artist_seed
+
+  def get_genres_seed(self, genres):
+    if genres == None or str(genres).strip() == "":
+      return None
+    else:
+      genre_seed = [genre.strip() for genre in str(genres).split(';')]
+      if len(genre_seed) == 0:
+        return None
+      else:
+        return genre_seed
+
+  def get_tracks_seed(self, tracks):
+    if tracks == None or str(tracks).strip() == "":
+      return None
+    else:
+      track_seed = []
+      for track in str(tracks).split(';'):
+        res = self._sp.search(track.strip(), limit=1, type="track")
+        track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
+      
+      if len(track_seed) == 0:
+        return None
+      else:
+        return track_seed
+
+
   def recommend(self, artists=None, genres=None, tracks=None, limit=20, play=0):
-    artists_seed = get_artists_seed(artists)    
-    genres_seed = get_genres_seed(genres)
-    tracks_seed = get_tracks_seed(tracks)
+    artists_seed = self.get_artists_seed(artists)    
+    genres_seed = self.get_genres_seed(genres)
+    tracks_seed = self.get_tracks_seed(tracks)
 
     self._query_index = 0
     self._query_kind = "track"
@@ -488,45 +527,6 @@ class SpotifySession():
       return "PYOK PLAY " +  name + " by " + artist
     else:
       return "PYOK FIND " + str(self._query_nresults)
-
-  def get_artists_seed(self, artists):
-    if artists == None or str(artists).strip() == "":
-      return None
-    else:
-      artist_seed = []
-      for artist in str(artists).split(','):
-        res = self._sp.search(artist.strip(), limit=1, type="artists")
-        artist_seed = artist_seed.append(res['artists'][0]['items']['id']) if len(res['items']) > 0 else artist_seed
-      
-      if len(artist_seed) == 0:
-        return None
-      else:
-        return artist_seed
-
-  def get_genres_seed(self, genres):
-    if genres == None or str(genres).strip() == "":
-      return None
-    else:
-      genre_seed = [genre.strip() for genre in str(genres).split(',')]
-      if len(genre_seed) == 0:
-        return None
-      else:
-        return genre_seed
-
-  def get_tracks_seed(self, tracks):
-    if tracks == None or str(tracks).strip() == "":
-      return None
-    else:
-      track_seed = []
-      for track in str(tracks).split(','):
-        res = self._sp.search(track.strip(), limit=1, type="track")
-        track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
-      
-      if len(track_seed) == 0:
-        return None
-      else:
-        return track_seed
-
 
   def get_recommended_artists(self, ref_artist, play=0):
     ref_artist = str(ref_artist).strip()
