@@ -42,7 +42,27 @@ class SpotifySession():
   def help(self):
     print("Hello I am SpotBot.")
     print("I am able to have a conversation with you and control your Spotify.")
+    print("In all the help functions I will refer to commands you can give to me between brackets, like [pause].")
+    print("")
     print("For me to work optimally I want you to be a friendly person and always speak in multiple words, except when I ask very specific questions like yes/no-questions.")
+    print("If I still don't understand you, you may need to be more specific in your answer, e.g.:")
+    print("me: Do you have a specific genre in mind?")
+    print("you: [The genre is [name of the genre]]")
+    print("")
+    print("You can use [what can I do with [name of topic]] for certain topics to get more information about that topic. I can help you with the following topics:")
+    print("-[functions]: This shows you information about most of my commands.")
+    print("-[playback]:  This shows you information about my playback functions.")
+    print("-[volume]:    This shows you information about my volume functions.")
+    print("-[shuffle]:   This shows my shuffle options.")
+    print("-[repeat]:    This shows my repeat options.")
+    print("-[current]:   This shows my functions regarding your current playback.")
+    print("-[find]:      This shows information about how to use my find function.")
+    print("-[play]:      This shows information about how to use my play function.")
+    print("-[enqueue]:   This shows information about how to enqueue items to your queue.")
+    print("-[device]     This shows information about how to select your playback device. This however does not work always as good as I want but I blame Spotify for this.")
+    print("")
+    print("I can understand many versions of everything you tell me, but bear with me if I do not understand you right away.")
+    print("")
     print("Before you can use my full capabilities you first need to login.")
 
 
@@ -60,17 +80,28 @@ class SpotifySession():
   def help_functions(self):
     print("My main aim is to hold a conversation with you to assist you with Spotify.")
     print("If you are logged in I can control your Spotify. I can...")
-    print("- Play/Resume your Spotify.")
-    print("- Pause your Spotify.")
-    print("- Skip to the next track.")
-    print("- Go back to the previous track.")
-    print("- Rewind to the start of the track.")
-    print("- Turn shuffle on and off.")
-    print("- Set repeat to track, context or off.")
-    print("- Save the track you are currently listening to.")
-    print("- Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
-    print("- Play a track, album, artist or playlist for you.")
-    print("- Tell you to which track you are currently listening.")
+    print("- [play] / [resume] / [pause] your Spotify.")
+    print("- [skip] to the [next track].")
+    print("- Go back to the [previous track].")
+    print("- [rewind] to the start of the track.")
+    print("- Turn [shuffle on] and [shuffle off].")
+    print("- Set [repeat] to track, context or off.")
+    print("- Ask for the [currently playing] track and ask [is current track saved].")
+    print("- You can then [add current to saved] or [remove current from saved]")
+    print("- I can [find track [name of track]], find you an album, artist or playlist in the same way.")
+    print("- I can also [play track [name of track]], or play an album, artist or playlist in the same way too.")
+    print("- You can also [enqueue [name of track]], however this only works with tracks.")
+    print("- Setting your playback device is also possible, but Spotify does not quite like that sometime.")
+    print("     This can be done by asking your [current device] or [select device]")
+    print("")
+    print("Each time I show you a list of items you can type [item [item number]] to select an item.")
+    print("You can often ask for [more items].")
+    print("You can also [query nextpage] or [query prevpage] to navigate the pages.")
+    print("")
+    print("Since I am a very sentimental bot, you can also talk about your feelings with me.")
+    print("I can also make you recomendations, this can be done in several ways.")
+    print("[can you make me a recommendation] is my preferred way of giving you recommendations.")
+    print("Or you can ask [play me a recommendation] if you want to listen to a recommendation right away.")
 
 
   def help_play_find(self):
@@ -84,6 +115,7 @@ class SpotifySession():
     print("- album")
     print("- artist")
     print("- playlist")
+    print("You can also enqueue items by typing [enqueue item [name of the item]], however this only works with tracks.")
 
 
   #########
@@ -659,15 +691,14 @@ class SpotifySession():
         - emotion - The emotion of the user, used to pick a suitable playlist.
       
       Returns:
-        - "EMOTIONFAIL" - Emotion is not a valid emotion.
-        - "EMOTIONOK" - Emotion was found and the playback of a suitable playlist has been started.
+        - "PYFAIL EMOTION" - Emotion is not a valid emotion.
+        - "PYOK EMOTION" - Emotion was found and the playback of a suitable playlist has been started.
     '''
-    
     emotion = str(emotion).upper()  
     emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY", "PARTY", "CHILL", "LOVESICK", "HOLIDAY", "ROADTRIP" ]
     
     if emotion not in emotion_list:
-        return "EMOTIONFAIL"
+        return "PYFAIL EMOTION"
 
     else:
         options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this track?")
@@ -687,7 +718,7 @@ class SpotifySession():
         exec(cmd)
         self.shuffle("on")
         self.next_track()
-        return "EMOTIONOK"
+        return "PYOK EMOTION"
   
 
   def play_track_positivity(self, score):
@@ -698,7 +729,7 @@ class SpotifySession():
         - score - The positivity score of the conversation with the user.
 
       Returns:
-        - "POSITIVITYOK" - A suitable playlist was found and the playback has been started.
+        - "PYOK POSITIVITY" - A suitable playlist was found and the playback has been started.
     '''
     score = float(score)
 
@@ -730,17 +761,17 @@ class SpotifySession():
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a track from a negative playlist
         print('This is a track from a Sad-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
     elif score > 0.1:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a track from a positive
         print('This is a track from a Positive-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
     else:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a track from the Relax playlist
         print('This is a track from a Relax-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
 
 
   ###################
@@ -789,10 +820,9 @@ class SpotifySession():
     elif kind == "genre":
       possible_genres = self._sp.recommendation_genre_seeds()['genres']
       if query.strip() in possible_genres:
-        print('genre in possible genres')
         tracks = self._sp.recommendations(seed_genres=[query.strip()], limit=self._query_limit)
       else:
-        return "PYFAIL RECOMMEND NORESULTS"
+        return "PYFAIL RECOMMEND GENREUNKNOWN"
 
     elif kind == "track":
       found_track = self._sp.search(query.strip(), limit=1, type="track")
