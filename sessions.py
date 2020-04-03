@@ -19,6 +19,8 @@ class SpotifySession():
     self._token_time = None
     self._test = 0
 
+    self._query_limit = 20
+
     self._query_results = None
     self._query_index = None
     self._query_kind = None
@@ -32,7 +34,6 @@ class SpotifySession():
     self._device = None
     self._device_id = None
     self._available_devices = None
-    #print("SpotifySession initialized.")
 
 
   ########
@@ -41,7 +42,9 @@ class SpotifySession():
   def help(self):
     print("Hello I am SpotBot.")
     print("I am able to have a conversation with you and control your Spotify.")
+    print("For me to work optimally I want you to be a friendly person and always speak in multiple words, except when I ask very specific questions like yes/no-questions.")
     print("Before you can use my full capabilities you first need to login.")
+
 
   def help_login(self):
     print("I you have not logged in yet, you can either type in  \"login\",")
@@ -52,6 +55,7 @@ class SpotifySession():
     print("When you have given the permission, you will be directed to a webpage that does not seem to work, however I only need the link of that page.")
     print("You will be prompted to give me an url, it is this url you need to give.")
     print("When this is done, all should be ok and I will be able to control your Spotify for you.")
+
 
   def help_functions(self):
     print("My main aim is to hold a conversation with you to assist you with Spotify.")
@@ -66,7 +70,8 @@ class SpotifySession():
     print("- Save the track you are currently listening to.")
     print("- Find a track, album, artist or playlist for you. \n    You can then choose which item you want to play from a list of results.")
     print("- Play a track, album, artist or playlist for you.")
-    print("- Tell you to which song you are currently listening.")
+    print("- Tell you to which track you are currently listening.")
+
 
   def help_play_find(self):
     print("You can use the [play [query]] function to immediately play the top result found with your provided [query].")
@@ -85,6 +90,17 @@ class SpotifySession():
   # LOGIN #
   #########
   def login(self, uname=""):
+    '''
+    Used to login a user into the Spotify API.
+    
+    Parameters:
+      - uname - User name to log in, if not specified this function tries to login an already saved username.
+
+    Returns:
+      - "PYFAIL LOGIN NONAME" - No username was provided and no username was saved.
+      - "PYFAIL LOGIN" - Something went wrong trying to log the user in.
+      - "PYOK LOGIN" - User is logged in succesfully.
+    '''
     try:
       if len(uname) == 0:
         try:
@@ -115,7 +131,19 @@ class SpotifySession():
     except Exception as fail:
       return "PYFAIL LOGIN"
 
+
   def logout(self, uname, all=0):
+    '''
+      Used to logout a user from the Spotify API.
+
+      Parameters:
+        - uname - The username to logout.
+        - all - 0 to just remove the user locally, 1 to open Spotify to all the user to remove Spotbot as authorized app.
+
+      Returns:
+        - "PYFAIL" - Something went wrong.
+        - "PYOK LOGOUT" - User was logged out succesfully.
+    '''
     saved_uname = "_"
     try:
       with open('uname.txt', 'r') as file:
@@ -126,11 +154,9 @@ class SpotifySession():
     if (uname == saved_uname):
       try:
         os.remove('uname.txt')
-        print(os.getcwd())
         os.remove('.cache-' + uname.strip())
       except Exception as fail:
-        print(fail)
-        #pass
+        return "PYFAIL " + fail
       
       if (all == 1):
         try:          
@@ -145,7 +171,16 @@ class SpotifySession():
     else:
       return "PYOK LOGOUT ALREADYLOGGEDOUT"
 
+
   def is_token_expired(self):
+    '''
+      Checks if the current token used to interact with the Spotify is still useful.
+      (A token expires after 3600 seconds)
+
+      Returns:
+        - True - Token is expired.
+        - False - Token is still valid.
+    '''
     res = (datetime.datetime.now() - self._token_time).seconds >= 3600
     if res:
       self.is_logged_in = False
@@ -155,18 +190,42 @@ class SpotifySession():
   # DEVICE CONTROL & SELECTION #
   ##############################
   def current_device(self):
+    '''
+      Returns: 
+        - "PYOK CURRDEVICE NONE" - No current device detected.
+        - "PYOK CURRDEVICE [device_name]" - Current device detected and the name of it.
+    '''
     if not self._device:
       return "PYOK CURRDEVICE NONE"
     return f"PYOK CURRDEVICE {self._device['name']}"
 
+
   def refresh_print_devices(self):
+    '''
+      Refreshes the available playback devices and prints them.
+
+      Returns:
+        - "PYOK DEVICESREFRESH [number of availble devices]" - Devices refreshed succesfully and the number of currently available devices.
+    '''
     self._available_devices = self._sp.devices()['devices']
     n = len(self._available_devices)
     if n > 1:
       print('\n'.join([f"{index+1}: {x['name']} ({x['type']})" for (index, x) in enumerate(self._available_devices)]))
     return f"PYOK DEVICESREFRESH {n}"
 
+
   def set_device(self, index=-1):
+    '''
+      Used to set the playback device for Spotify.
+
+      Parameters:
+        - index - The index of the avaible playback devices to set as active.
+
+      Returns:
+        - "PYOK SETDEVICE NONE" - Current active device set to no device.
+        - "PYFAIL SETDEVICE OUTOFRANGE [number of available devices]" - The item to select is not in the rang of the amount of available devices.
+        - "PYOK SETDEVICE [device name]" - The currently active playback device is succesfully set and its name.
+    '''
     if index < 0:
       self._device = None
       self._device_id = None
@@ -182,43 +241,114 @@ class SpotifySession():
       self._device_id = self._device['id']
       return f"PYOK SETDEVICE {self._device['name']}"
   
+
   def reset_device(self):
+    '''
+      Sets the playback device to the default.
+
+      Returns:
+        - The return value of set_device() -
+    '''
     return self.set_device()
 
 
   #########################
   # BASIC SPOTIFY CONTROL #
-  #########################
+  #########################  
   def play(self):
+    '''
+      Resumes the Spotify playback.
+
+      Returns:
+        - "PYOK PLAYB" - Playback succesfully changed.
+    '''
     self._sp.start_playback(self._device_id)
     return "PYOK PLAYB"
 
+
   def pause(self):
+    '''
+      Pauses the Spotify playback.
+
+      Returns:
+        - "PYOK PAUSE" - Playback succesfully paused.
+    '''
     self._sp.pause_playback(self._device_id)
     return "PYOK PAUSE"
 
+
   def next_track(self):
+    '''
+      Sets the Spotify playback to the next track.
+
+      Returns:
+        - "PYOK PLAYB" - Playback succesfully changed.
+    '''
     self._sp.next_track(self._device_id)
     return "PYOK PLAYB"
 
+
   def prev_track(self):
+    '''
+      Sets the Spotify playback to the previous track.
+
+      Returns:
+        - "PYOK PLAYB" - Playback succesfully changed.
+    '''
     self._sp.previous_track(self._device_id)
     return "PYOK PLAYB"
 
+
   def rewind(self):
+    '''
+      Sets the Spotify playback to the start of the current playing track.
+
+      Returns:
+        - "PYOK PLAYB" - Playback succesfully changed.
+    '''
     self._sp.seek_track(0)
     return "PYOK PLAYB"
 
+
   def shuffle(self, state):
+    '''
+      Sets the shuffle state of Spoitfy to a new state.
+      Parameters:
+        - state - "on" or "off"
+
+      Returns:
+      - "PYOK SHUFFLE [new state]" - Shuffle state succesfully changed to new state and the new state name.
+    '''
     stb = state == "on"
     self._sp.shuffle(stb, self._device_id)
     return "PYOK SHUFFLE " + state.upper()
 
+
   def repeat(self, state):
+    '''
+      Sets the repeat state of Spotify to a new state.
+      
+      Parameters:
+        - state - "track", "context" or "off"
+
+      Returns:
+      - "PYOK PLAYB" - Playback succesfully changed.
+    '''
     self._sp.repeat(state, self._device_id)
     return "PYOK REPEAT " + state.upper()
 
+
   def change_volume(self, increase=0, step=10):
+    '''
+      Used to change the Spotify playback volume with a certain value.
+
+      Parameters:  
+        - increase - 0 to decrease the volume, 1 to increase the volume.  
+        - step - percentage (in full percent or as floating point value between 0-1) to de- or increase the volume with.
+
+      Returns:
+      - "PYOK VOLUME [new volume value]" - Volume succesfully changed and the new volume percentage.
+    '''
     step = int(str(step).strip())
     if 0 < step < 1:
       step = step * 100
@@ -231,7 +361,17 @@ class SpotifySession():
     new_volume = new_volume - step if increase == 0 else new_volume + step 
     return(self.set_volume(new_volume))
 
+
   def set_volume(self, volume):
+    '''
+      Used to set the Spotify playback volume to a certain value.
+
+      Parameters:  
+        - volume - The new volume percentage (in full percent or as floating point value between 0-1).
+
+      Returns:
+      - "PYOK VOLUME [new volume value]" - Volume succesfully set and the new volume percentage.
+    '''
     volume = float(volume)
     if 0 < volume < 1:
       volume = volume * 100
@@ -240,7 +380,7 @@ class SpotifySession():
     elif volume < 0:
       volume = 0
     volume = int(volume)
-    self._sp.volume(volume)
+    self._sp.volume(volume, self._device_id)
     return "PYOK VOLUME " + str(volume)
 
 
@@ -248,12 +388,26 @@ class SpotifySession():
   # CURRENT PLAYBACK & SAVED TRACKS #
   ###################################
   def current_playback(self):
+    '''
+      Gets the currently playing track on Spotify.
+
+      Returns:
+        - "PYOK CURRPLAYB [name of track] by [name of artist]" -
+	  '''
     playing = self._sp.current_playback()
     name = playing['item']['name']
     artist = playing['item']['artists'][0]['name']
     return "PYOK CURRPLAYB " + name + " by " + artist
 
+
   def is_curr_on_saved(self):
+    '''
+      Gets if the currently playing track is saved in the users Spotify Music Library.
+
+      Returns:
+        - "PYOK ISONSAVED YES" - The currently playing track is saved in the users Spotify Music Library,
+        - "PYOK ISONSAVED NO" - The currently playing track is not saved in the users Spotify Music Libary.
+	  '''
     curr_track = self._sp.current_playback()
     is_on_saved = self._sp.current_user_saved_tracks_contains([curr_track['item']['uri']])
     if is_on_saved:
@@ -261,26 +415,54 @@ class SpotifySession():
     else:
       return "PYOK ISONSAVED NO"
 
+
   def add_curr_to_saved(self):
+    '''
+      Adds the currently playing track to the users Spotify Music Library.
+
+      Returns:
+        - "PYOK ADDTOSAVED [name of track] by [name of artist]" - The currently playing track is succesfully added to the users Spotify Music Library.
+	  '''
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_add([curr_track['item']['uri']])
     return "PYOK ADDTOSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
+
   def remove_curr_from_saved(self):
+    '''
+      Removes the currently playing track from the users Spotify Music Library.
+
+      Returns:
+        - "PYOK REMOVEFROMSAVED [name of track] by [name of artist]" - The currently playing track is succesfully removed from the users Spotify Music Library.
+	  '''
     curr_track = self._sp.current_playback()
     self._sp.current_user_saved_tracks_delete([curr_track['item']['uri']])
     return "PYOK REMOVEFROMSAVED " + curr_track['item']['name'] + " by " + curr_track['item']['artists'][0]['name']
 
 
-  #####################
-  # FIND & PLAY SONGS #
-  #####################
+  ######################
+  # FIND & PLAY TRACKS #
+  ######################
   def play_from_query(self, index=-1):
+    '''
+      Plays an item from the currently saved query results.  
+      To prevent the Spotify of stopping playback after playing one track,  
+      this function enqueues a track to the users queue and immediately skips to it.  
+      If the index is greater than the amount of available items, the playback is just set to the next track.
+
+      Parameters:
+        - index - The index of the item to play.
+
+      Returns:
+        - "PYOK PLAY [name of item] by [name of owner of item]" - Succesfully started playback of the requested item.
+	  '''
     if index >= 0:
-      self._query_index = int(index) - 1
+      self._query_index = int(index) - 1 # Humans are 1-based.
+    
+    if self._query_index >= self._query_nresults:
+      return self.next_track()
 
     if self._query_kind == "track":
-      #self._sp.start_playback(device_id=self._device_id, uris=[self._query_results[self._query_index]['uri']])
       self._sp.add_to_queue(device_id=self._device_id, uri=self._query_results[self._query_index]['uri'])
       self.next_track()
     else:
@@ -297,7 +479,24 @@ class SpotifySession():
 
     return "PYOK PLAY " + name + by
 
+
   def enqueue_from_query(self, index=-1, play=0):
+    '''
+      Adds an item to the playback queue of the user.         
+
+      Parameters:
+        - index - The index of the track to enqueue.
+        - play - 0 to just enqueue the track, 1 to immediately start playing this track.
+
+      Returns:
+        - "PYOK ENQUEUE [name of track] by [name of artist]" - Succesfully enqueued the track.
+        - "PYOK PLAY [name of track] by [name of artist]" - Succesfully started playback of the track.
+
+        !!! This function can only enqueue tracks due to the Spotify API !!!
+	  '''
+    if self._query_kind != "track":
+      return "PYFAIL ENQUEUE INVALIDTYPE"
+
     if index >= 0:
       self._query_index = int(index) - 1
 
@@ -312,21 +511,52 @@ class SpotifySession():
       return "PYOK PLAY " + name + " by " + artist
     return "PYOK ENQUEUE " + name + " by " + artist
 
+
   def play_next_from_query(self):
-    self.play_from_query(index=self._query_index+1)
+    '''
+      Plays the next item from the currently saved query results.
+
+      Returns:
+        - The return value of play_from_query() - 
+	  '''
+    return self.play_from_query(index=self._query_index+1)
+
 
   def find(self, query, kind, offset=0, limit=10, play=0, enqueue=0):
+    '''
+      Uses Spotify's search function to find items from a query.  
+      A kind is needed for the search function to specify the kind of items to search for.  
+
+      Find can either return a list of the results, enqueue the result (if it is a track), or immediately start playing the results.    
+
+      Parameters:
+        - query - The search query.
+        - kind - The type of item to search for. "track", "album", "artist" or "playlist".
+        - offset - The index of the first item to return.
+        - limit - The amount of items to search for.
+        - play - 0 to do nothing, 1 to immediately start playing the first result.
+        - enqueue - 0 to do nothing, 1 to enqueue the stop result (if it is a track).
+
+      Returns:
+        - "PYFAIL FIND INVALIDTYPE [provided type]" - Provided type is not a valid item type.
+        - "PYFAIL FIND NORESULTS" - No results were found.
+        - A return value of play_from_query() - If play == 1
+        - A return value of play_from_ - 
+
+        - "PYOK ADDTOSAVED [name of track] by [name of artist]" - 
+	  '''
     kind = kind.strip()
     if not (kind in ["track", "album", "artist", "playlist"]):
-      return "PYFAIL FIND INVALIDTYPE"
+      return "PYFAIL FIND INVALIDTYPE " + kind
 
+    self._query_limit = limit
     self._query_index = 0
     self._query_kind = kind
     self._query = query
     self._offset = offset
     self._query_page = 0
 
-    q = self._sp.search(query, type=kind)
+    q = self._sp.search(query, type=kind, limit=self._query_limit)
     self._query_results = q[kind+'s']['items']
 
     self._query_nresults = len(self._query_results)
@@ -341,6 +571,7 @@ class SpotifySession():
       return self.enqueue_from_query()
     else:
       return "PYOK FIND " + str(self._query_nresults)
+
 
   def print_query_result(self, page=-1):
     if page == -1:
@@ -368,9 +599,11 @@ class SpotifySession():
 
     return "PYOK PRINTRESULTS"
 
+
   def print_next_query_page(self):
     self._query_page += 1
     return self.print_query_result()
+
 
   def print_prev_query_page(self):
     self._query_page -= 1
@@ -389,11 +622,12 @@ class SpotifySession():
     self.next_track()
     return "PYOK COOLDOWN"
 
+
   def play_track_emotion(self, emotion):
     '''
       Takes as input a string from one of the emotions.
       Returns None if emotion is not known.
-      Plays a song with that mood if emotion is known returns.
+      Plays a track with that mood if emotion is known returns.
     '''
     
     emotion = str(emotion).upper()  
@@ -403,18 +637,18 @@ class SpotifySession():
         return "EMOTIONFAIL"
 
     else:
-        options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this song?")
-                  ,"SAD" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this song?")
-                  ,"RELAX" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this song?")
-                  ,"ANGRY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this song?")
-                  ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this song?")
-                  ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this song?")
-                  ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this song?")
-                  ,"PARTY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX0IlCGIUGBsA')", "What do you think of this song?")
-                  ,"CHILL" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX4WYpdgoIcn6')", "What do you think of this song?")
-                  ,"LOVESICK" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6dm9jZ2p8iGGTLre7nY4hf')", "What do you think of this song?")
-                  ,"HOLIDAY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:1KFOvnwqjeCpYTSC91wM4U')", "What do you think of this song?")
-                  , "ROADTRIP": ("self._sp.start_playback(self._device_id, 'spotify:playlist:27LXgC5xD1s1vpB7E0pA3W')", "What do you think of this song?")
+        options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this track?")
+                  ,"SAD" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:54ozEbxQMa0OeozoSoRvcL')", "What do you think of this track?")
+                  ,"RELAX" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle')", "What do you think of this track?")
+                  ,"ANGRY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6ft4ijUITtTeVC0dUCDdvH')", "What do you think of this track?")
+                  ,"SLEEP" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWStLt4f1zJ6I')", "What do you think of this track?")
+                  ,"ENERGETIC" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:0gFLYrJoh1tLxJvlKcd5Lv')", "What do you think of this track?")
+                  ,"STUDY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX9sIqqvKsjG8')", "What do you think of this track?")
+                  ,"PARTY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX0IlCGIUGBsA')", "What do you think of this track?")
+                  ,"CHILL" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DX4WYpdgoIcn6')", "What do you think of this track?")
+                  ,"LOVESICK" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:6dm9jZ2p8iGGTLre7nY4hf')", "What do you think of this track?")
+                  ,"HOLIDAY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:1KFOvnwqjeCpYTSC91wM4U')", "What do you think of this track?")
+                  , "ROADTRIP": ("self._sp.start_playback(self._device_id, 'spotify:playlist:27LXgC5xD1s1vpB7E0pA3W')", "What do you think of this track?")
                   }
         cmd, mess = options[emotion]
         exec(cmd)
@@ -422,6 +656,7 @@ class SpotifySession():
         self.next_track()
         return "EMOTIONOK"
   
+
   def play_track_positivity(self, score):
     score = float(score)
 
@@ -451,73 +686,30 @@ class SpotifySession():
     print('You seem {}'.format(mood))
     if score < -0.1:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a song from a negative playlist
-        print('This is a song from a Sad-playlist')
+        self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a track from a negative playlist
+        print('This is a track from a Sad-playlist')
         return "POSITIVITYOK"
     elif score > 0.1:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a song from a positive
-        print('This is a song from a Positive-playlist')
+        self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a track from a positive
+        print('This is a track from a Positive-playlist')
         return "POSITIVITYOK"
     else:
         self._sp.shuffle(True, device_id=None)
-        self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a song from the Relax playlist
-        print('This is a song from a Relax-playlist')
+        self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a track from the Relax playlist
+        print('This is a track from a Relax-playlist')
         return "POSITIVITYOK"
 
 
   ###################
   # RECOMMENDATIONS #
   ###################
-  def get_artists_seed(self, artists):
-    if artists == None or str(artists).strip() == "":
-      return None
-    else:
-      artist_seed = []
-      for artist in str(artists).split(';'):
-        #print(artist)
-        res = self._sp.search(artist.strip(), limit=1, type="artist")
-        #print(res)
-        if len(res['artists']['items']) > 0:
-          artist_seed.append(res['artists']['items'][0]['id'])
-        #artist_seed = artist_seed.append(res['artists']['items'][0]['id']) if len(res['artists']['items']) > 0 else artist_seed
-      
-      if len(artist_seed) == 0:
-        return None
-      else:
-        return artist_seed
+  def recommend(self, query="", kind="track", limit=20, play=0):
+    kind = kind.strip()
+    if not (kind in ["track", "artist", "playlist"]):
+      return "PYFAIL RECOMMEND INVALIDTYPE " + kind
 
-  def get_genres_seed(self, genres):
-    if genres == None or str(genres).strip() == "":
-      return None
-    else:
-      genre_seed = [genre.strip() for genre in str(genres).split(';')]
-      if len(genre_seed) == 0:
-        return None
-      else:
-        return genre_seed
-
-  def get_tracks_seed(self, tracks):
-    if tracks == None or str(tracks).strip() == "":
-      return None
-    else:
-      track_seed = []
-      for track in str(tracks).split(';'):
-        res = self._sp.search(track.strip(), limit=1, type="track")
-        if len(res['tracks']['items']) > 0:
-          track_seed.append(res['tracks']['items']['id'])
-        #track_seed = track_seed.append(res['tracks']['items']['id']) if len(res['items']) > 0 else track_seed
-      
-      if len(track_seed) == 0:
-        return None
-      else:
-        return track_seed
-
-
-  def recommend(self, artists=None, genres=None, tracks=None, limit=20, play=0):
-    artists_seed = self.get_artists_seed(artists)    
-    genres_seed = self.get_genres_seed(genres)
-    tracks_seed = self.get_tracks_seed(tracks)
+    self._query_limit = limit
 
     self._query_index = 0
     self._query_kind = "track"
@@ -525,10 +717,37 @@ class SpotifySession():
     self._offset = 0
     self._query_page = 0
 
-    tracks = self._sp.recommendations(seed_artists=artists_seed, seed_genres=genres_seed, seed_tracks=tracks_seed, limit=limit)
-    self._query_results = tracks['tracks']
+    if query == "":
+      top_tracks = self._sp.current_user_top_tracks(limit=5, time_range="short_term")
+      tracks = self._sp.recommendations(seed_tracks=[x['uri'] for x in top_tracks['items'][:5]], limit=self._query_limit)
 
+    elif kind == "artist":
+      found_artist = self._sp.search(query.strip(), limit=1, type="artist")
+      if len(found_artist['artists']['items']) > 0:       
+        tracks = self._sp.recommendations(seed_artists=[found_artist['artists']['items'][0]['id']], limit=self._query_limit)
+      else:
+        return "PYFAIL RECOMMEND NORESULTS"
+
+    elif kind == "genre":
+      possible_genres = self._sp.recommendation_genre_seeds()['genres']
+      if query.strip() in possible_genres:
+        print('genre in possible genres')
+        tracks = self._sp.recommendations(seed_genres=[query.strip()], limit=self._query_limit)
+      else:
+        return "PYFAIL RECOMMEND NORESULTS"
+
+    elif kind == "track":
+      found_track = self._sp.search(query.strip(), limit=1, type="track")
+      if len(found_track['tracks']['items']) > 0:
+        tracks = self._sp.recommendations(seed_tracks=[found_track['tracks']['items'][0]['id']], limit=self._query_limit)
+      tracks = self.get_track_recommendations(query)
+
+    else:
+      return "PYFAIL RECOMMEND NORESULTS"
+    
+    self._query_results = tracks['tracks']
     self._query_nresults = len(self._query_results)
+
     if self._query_nresults == 0:
       return "PYFAIL RECOMMEND NORESULTS"
     elif play:
@@ -539,8 +758,12 @@ class SpotifySession():
     else:
       return "PYOK FIND " + str(self._query_nresults)
 
+
   def get_recommended_artists(self, ref_artist, play=0):
     ref_artist = str(ref_artist).strip()
+    if ref_artist == "":
+      return "PYFAIL RECOMMENDARTIST ARTISTNOTFOUND" + ref_artist
+
     found_artist = self._sp.search(ref_artist, limit=1, type="artist")
 
     if len(found_artist['artists']) == 0:
@@ -572,5 +795,5 @@ class SpotifySession():
   # TEST #
   ########
   def test(self):
-    self._test += 1
-    return str(self._test)
+    '''For testing purposes only'''
+    return "PYOK"
