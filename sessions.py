@@ -659,15 +659,15 @@ class SpotifySession():
         - emotion - The emotion of the user, used to pick a suitable playlist.
       
       Returns:
-        - "EMOTIONFAIL" - Emotion is not a valid emotion.
-        - "EMOTIONOK" - Emotion was found and the playback of a suitable playlist has been started.
+        - "PYFAIL EMOTION" - Emotion is not a valid emotion.
+        - "PYOK EMOTION" - Emotion was found and the playback of a suitable playlist has been started.
     '''
     
     emotion = str(emotion).upper()  
     emotion_list = ["HAPPY", "SAD", "RELAX", "ANGRY", "SLEEP", "ENERGETIC", "STUDY", "PARTY", "CHILL", "LOVESICK", "HOLIDAY", "ROADTRIP" ]
     
     if emotion not in emotion_list:
-        return "EMOTIONFAIL"
+        return "PYFAIL EMOTION"
 
     else:
         options = {"HAPPY" : ("self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWSf2RDTDayIx')", "What do you think of this track?")
@@ -687,7 +687,7 @@ class SpotifySession():
         exec(cmd)
         self.shuffle("on")
         self.next_track()
-        return "EMOTIONOK"
+        return "PYOK EMOTION"
   
 
   def play_track_positivity(self, score):
@@ -698,7 +698,7 @@ class SpotifySession():
         - score - The positivity score of the conversation with the user.
 
       Returns:
-        - "POSITIVITYOK" - A suitable playlist was found and the playback has been started.
+        - "PYOK POSITIVITY" - A suitable playlist was found and the playback has been started.
     '''
     score = float(score)
 
@@ -730,17 +730,17 @@ class SpotifySession():
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:7HCXp5mTEkbwb9hYq2JTmO') # starts playing a track from a negative playlist
         print('This is a track from a Sad-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
     elif score > 0.1:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:37i9dQZF1DWUAZoWydCivZ') # starts playing a track from a positive
         print('This is a track from a Positive-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
     else:
         self._sp.shuffle(True, device_id=None)
         self._sp.start_playback(self._device_id, 'spotify:playlist:0RD0iLzkUjrjFKNUHu2cle') # starts playing a track from the Relax playlist
         print('This is a track from a Relax-playlist')
-        return "POSITIVITYOK"
+        return "PYOK POSITIVITY"
 
 
   ###################
